@@ -9,4 +9,10 @@ authRouter.post(
   AuthControllers.loginController.handle
 );
 
+authRouter.get(
+  "/refresh-tokens",
+  AuthControllers.refreshTokensController.validate(),
+  AuthControllers.refreshTokensController.handle
+);
+
 export default authRouter;

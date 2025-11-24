@@ -40,4 +40,9 @@ export default class JwtService {
       throw err;
     }
   }
+
+  static async refreshTokens(token: string): Promise<ITokens> {
+    await JwtService.verifyToken(token);
+    return await JwtService.generateTokens();
+  }
 }

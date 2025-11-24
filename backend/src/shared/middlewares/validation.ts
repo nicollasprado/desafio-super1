@@ -3,7 +3,7 @@ import { ZodError, ZodObject } from "zod";
 import { StatusCodes } from "http-status-codes";
 import { $ZodIssue } from "zod/v4/core";
 
-type TAllowedFields = "body" | "query" | "header" | "params";
+type TAllowedFields = "body" | "query" | "headers" | "params";
 type TValidation = (field: TAllowedFields, schema: ZodObject) => RequestHandler;
 
 export const validation: TValidation = (field, schema) => (req, res, next) => {
