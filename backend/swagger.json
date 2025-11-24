@@ -1,0 +1,114 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "version": "1.0",
+    "title": "Marketplace API",
+    "description": "",
+    "contact": {
+      "name": "Nicollas Prado"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3333",
+      "description": "Servidor local"
+    }
+  ],
+  "schemes": ["http"],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "description": "Registro de usuário",
+        "operationId": "userRegister",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "description": "Primeiro nome",
+                    "example": "Nicollas"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "description": "Último nome",
+                    "example": "Prado"
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "Email",
+                    "example": "ex@example.com"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Número de telefone",
+                    "example": "84912345678"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Senha",
+                    "example": "senhasecreta"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário cadastrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "firstName": {
+                      "type": "string",
+                      "description": "Primeiro nome",
+                      "example": "Nicollas"
+                    },
+                    "lastName": {
+                      "type": "string",
+                      "description": "Último nome",
+                      "example": "Prado"
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "Email",
+                      "example": "ex@example.com"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "description": "Data de criação",
+                      "example": "2025-24-11T12:00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro do usuário",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Objeto de erro",
+                      "example": "Email em uso"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
