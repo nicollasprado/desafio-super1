@@ -5,6 +5,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "~/swagger.json";
 import routes from "./routes";
 import errorHandler from "./shared/exceptions/errorHandler";
+import middlewares from "./shared/middlewares";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use("/user", routes.userRouter);
 app.use("/auth", routes.authRouter);
+app.use("/service", middlewares.authMiddleware, routes.serviceRouter);
 
 app.use(errorHandler);
 
