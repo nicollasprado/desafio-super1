@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id String @id @default(uuid())
+  firstName String @map("first_name")
+  lastName String @map("last_name")
+  email String @unique
+  phone String? @unique
+  providedServices ProviderService[]
+  contractedServices ContractedService[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("users")
+}
+
+model Service {
+  id String @id @default(uuid())
+  providerServices ProviderService[]
+
+  @@map("service")
+}
+
+model ProviderService {
+  id String @id @default(uuid())
+  description String
+  provider User @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  providerId String @map("provider_id")
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId String @map("service_id")
+  variants ServiceVariants[]
+  schedules ServiceSchedule[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("provider_service")
+}
+
+model ServiceVariants {
+  id String @id @default(uuid())
+  name String
+  price Int
+  duration_minutes Int
+  providerService ProviderService @relation(fields: [providerServiceId], references: [id], onDelete: Cascade)
+  providerServiceId String @map("provider_service_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("service_variants")
+}
+
+model ContractedService {
+  id String @id @default(uuid())
+  status SERVICE_STATUS
+  total_price Int
+  contractor User @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  contractorId String @map("contractor_id")
+  schedules ContractedServiceSchedule[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("contracted_service")
+}
+
+model ServiceSchedule {
+  id String @id @default(uuid())
+  weekday Int
+  startTime DateTime @db.Time() @map("start_time")
+  endTime DateTime @db.Time() @map("end_time")
+  providerService ProviderService @relation(fields: [providerServiceId], references: [id], onDelete: Cascade)
+  providerServiceId String @map("provider_service_id")
+  contractedServiceSchedules ContractedServiceSchedule[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([providerServiceId, weekday])
+  @@map("service_schedule")
+}
+
+model ContractedServiceSchedule {
+  id String @id @default(uuid())
+  startTime DateTime @db.Time() @map("start_time")
+  endTime DateTime @db.Time() @map("end_time")
+  serviceSchedule ServiceSchedule @relation(fields: [serviceScheduleId], references: [id], onDelete: Cascade)
+  serviceScheduleId String @map("service_schedule_id")
+  contractedService ContractedService @relation(fields: [contractedServiceId], references: [id], onDelete: Cascade)
+  contractedServiceId String @map("contracted_service_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("contracted_service_date")
+}
+
+enum SERVICE_STATUS {
+  PAYMENT_PENDING
+  WAITING_CONFIRMATION
+  SCHEDULED
+  ONGOING
+  FINISHED
+}

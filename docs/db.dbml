@@ -1,0 +1,65 @@
+Table users {
+    id varchar [pk]
+    first_name varchar
+    last_name varchar
+    email varchar [unique]
+    phone varchar [null]
+    created_at timestamp
+    updated_at timestamp
+}
+
+Table services {
+    id varchar [pk]
+    name varchar
+}
+
+Table provider_service {
+    id varchar [pk]
+    description varchar
+    created_at timestamp
+    updated_at timestamp
+    user_id varchar [ref: > users.id]
+    service_id varchar [ref: - services.id]
+}
+
+Table service_variants {
+    id varchar [pk]
+    name varchar
+    price integer
+    duration_in_minutes integer
+    created_at timestamp
+    updated_at timestamp
+    provider_service_id varchar [ref: > provider_service.id]
+}
+
+Table contracted_service {
+    id varchar [pk]
+    status SERVICE_STATUS
+    total_price integer
+    created_at timestamp
+    updated_at timestamp
+    contractor_id varchar [ref: - users.id]
+    service_variant_id varchar [ref: > service_variants.id]
+}
+
+Table contracted_service_schedules {
+    id varchar [pk]
+    service_schedule_id varchar [ref: > service_schedule.id]
+    contracted_service_id varchar [ref: > contracted_service.id]
+}
+
+Table service_schedule {
+    id varchar [pk]
+    weekday integer
+    start_time time
+    end_time time
+    provider_service_id varchar [ref: - provider_service.id]
+}
+
+enum SERVICE_STATUS {
+    PAYMENT_PENDING
+    WAITING_CONFIRMATION
+    SCHEDULED
+    ONGOING
+    FINISHED
+}
