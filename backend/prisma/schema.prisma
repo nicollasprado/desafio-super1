@@ -50,7 +50,7 @@ model ServiceVariants {
   id                String          @id @default(uuid())
   name              String
   price             Int
-  duration_minutes  Int
+  durationMinutes   Int             @map("duration_minutes")
   providerService   ProviderService @relation(fields: [providerServiceId], references: [id], onDelete: Cascade)
   providerServiceId String          @map("provider_service_id")
   createdAt         DateTime        @default(now()) @map("created_at")

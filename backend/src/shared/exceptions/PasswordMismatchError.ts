@@ -2,6 +2,6 @@ import AppError from "./AppError";
 
 export default class PasswordMismatchError extends AppError {
   constructor() {
-    super("Credenciais Inválidas", 400);
+    super("Invalid credentials", 400);
   }
 }
