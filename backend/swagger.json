@@ -16,7 +16,7 @@
   ],
   "schemes": ["http"],
   "paths": {
-    "/auth/register": {
+    "/user": {
       "post": {
         "description": "Registro de usuário",
         "operationId": "userRegister",
