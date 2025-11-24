@@ -1,5 +1,6 @@
 import { validation } from "@/shared/middlewares/validation";
 import JwtService from "@/shared/services/JwtService";
+import setRefreshTokenCookie from "@/util/setRefreshTokenCookie";
 import { Request, Response } from "express";
 import z from "zod";
 
@@ -19,7 +20,8 @@ class RefreshTokensController {
 
     const tokens = await JwtService.refreshTokens(token);
 
-    return res.json(tokens);
+    setRefreshTokenCookie(res, tokens.refreshToken);
+    return res.json({ token: tokens.token });
   }
 }
 

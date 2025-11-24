@@ -4,6 +4,7 @@ import UserNotFoundError from "@/shared/exceptions/UserNotFoundError";
 import ITokens from "@/shared/interface/ITokens";
 import { validation } from "@/shared/middlewares/validation";
 import JwtService from "@/shared/services/JwtService";
+import setRefreshTokenCookie from "@/util/setRefreshTokenCookie";
 import { compare } from "bcrypt";
 import { Request, Response } from "express";
 import z from "zod";
@@ -41,7 +42,8 @@ class LoginController {
 
     const tokens: ITokens = await JwtService.generateTokens();
 
-    return res.json(tokens);
+    setRefreshTokenCookie(res, tokens.refreshToken);
+    return res.json({ token: tokens.token });
   }
 }
 
