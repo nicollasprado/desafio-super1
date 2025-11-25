@@ -56,7 +56,7 @@ const reqBodySchema = z.object({
 
 type TReqBodySchema = z.infer<typeof reqBodySchema>;
 
-class CreateProviderService {
+class CreateProviderServiceController {
   validate() {
     return validation("body", reqBodySchema);
   }
@@ -109,6 +109,6 @@ class CreateProviderService {
   }
 }
 
-const createProviderService = new CreateProviderService();
+const createProviderServiceController = new CreateProviderServiceController();
 
-export default createProviderService;
+export default createProviderServiceController;

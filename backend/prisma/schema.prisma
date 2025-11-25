@@ -42,6 +42,7 @@ model ProviderService {
   schedules   ServiceSchedule[]
   createdAt   DateTime          @default(now()) @map("created_at")
   updatedAt   DateTime          @updatedAt @map("updated_at")
+  deletedAt   DateTime?         @map("deleted_at")
 
   @@map("provider_service")
 }
@@ -55,6 +56,7 @@ model ServiceVariants {
   providerServiceId String          @map("provider_service_id")
   createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt         DateTime        @updatedAt @map("updated_at")
+  deletedAt         DateTime?       @map("deleted_at")
 
   @@map("service_variants")
 }
@@ -68,6 +70,7 @@ model ContractedService {
   schedules    ContractedServiceSchedule[]
   createdAt    DateTime                    @default(now()) @map("created_at")
   updatedAt    DateTime                    @updatedAt @map("updated_at")
+  deletedAt    DateTime?                   @map("deleted_at")
 
   @@map("contracted_service")
 }
@@ -82,6 +85,7 @@ model ServiceSchedule {
   contractedServiceSchedules ContractedServiceSchedule[]
   createdAt                  DateTime                    @default(now()) @map("created_at")
   updatedAt                  DateTime                    @updatedAt @map("updated_at")
+  deletedAt                  DateTime?                   @map("deleted_at")
 
   @@unique([providerServiceId, weekday])
   @@map("service_schedule")
