@@ -19,13 +19,16 @@ const reqQueryBody = z.object({
     .string()
     .refine((val) => validator.isUUID(val), { error: "ServiceId is not uuid" })
     .optional(),
-  weekDay: z.string().refine(
-    (val) => {
-      const numVal = Number(val);
-      return numVal >= 0 && numVal <= 6;
-    },
-    { error: "limit must be between 0 and 6" }
-  ),
+  weekDay: z
+    .string()
+    .refine(
+      (val) => {
+        const numVal = Number(val);
+        return numVal >= 0 && numVal <= 6;
+      },
+      { error: "limit must be between 0 and 6" }
+    )
+    .optional(),
 });
 type TReqQuery = z.infer<typeof reqQueryBody>;
 
