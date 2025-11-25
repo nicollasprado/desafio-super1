@@ -3,7 +3,7 @@
   "info": {
     "version": "1.0",
     "title": "Marketplace API",
-    "description": "",
+    "description": "API para marketplace de serviços",
     "contact": {
       "name": "Nicollas Prado"
     }
@@ -14,6 +14,7 @@
       "description": "Servidor local"
     }
   ],
+  "security": [{ "bearerAuth": [] }],
   "schemes": ["http"],
   "paths": {
     "/user": {
@@ -25,34 +26,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "firstName": {
-                    "type": "string",
-                    "description": "Primeiro nome",
-                    "example": "Nicollas"
-                  },
-                  "lastName": {
-                    "type": "string",
-                    "description": "Último nome",
-                    "example": "Prado"
-                  },
-                  "email": {
-                    "type": "string",
-                    "description": "Email",
-                    "example": "ex@example.com"
-                  },
-                  "phone": {
-                    "type": "string",
-                    "description": "Número de telefone",
-                    "example": "84912345678"
-                  },
-                  "password": {
-                    "type": "string",
-                    "description": "Senha",
-                    "example": "senhasecreta"
-                  }
-                }
+                "$ref": "#/components/schemas/UserRegister"
               }
             }
           }
@@ -63,29 +37,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "firstName": {
-                      "type": "string",
-                      "description": "Primeiro nome",
-                      "example": "Nicollas"
-                    },
-                    "lastName": {
-                      "type": "string",
-                      "description": "Último nome",
-                      "example": "Prado"
-                    },
-                    "email": {
-                      "type": "string",
-                      "description": "Email",
-                      "example": "ex@example.com"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "description": "Data de criação",
-                      "example": "2025-24-11T12:00:00:00.000Z"
-                    }
-                  }
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
             }
@@ -95,19 +47,371 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Objeto de erro",
-                      "example": "Email em uso"
-                    }
-                  }
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
           }
         }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "description": "Autenticação de usuário (login)",
+        "operationId": "authLogin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AuthLoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token gerado e cookie de refresh setado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthTokenResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Credenciais inválidas",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh-tokens": {
+      "get": {
+        "description": "Trocar token via refresh token (Enviar header Authorization: Bearer <token>)",
+        "operationId": "authRefreshTokens",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Novo token e cookie de refresh setado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthTokenResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Token inválido",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/service": {
+      "post": {
+        "description": "Criar um tipo de serviço",
+        "operationId": "createService",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ServiceCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Service criado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "name": { "type": "string" } }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/service/provider": {
+      "post": {
+        "description": "Criar providerService (provider + service + variants + schedules)",
+        "operationId": "createProviderService",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderServiceCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "ProviderService criado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderServiceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Listar providerServices (paginação e filtros)",
+        "operationId": "listProviderServices",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 0 },
+            "required": true,
+            "description": "Página (0-based)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 30 },
+            "required": true,
+            "description": "Tamanho da página (1-30)"
+          },
+          {
+            "name": "serviceId",
+            "in": "query",
+            "schema": { "type": "string" },
+            "required": false,
+            "description": "UUID do Service"
+          },
+          {
+            "name": "weekDay",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 0, "maximum": 6 },
+            "required": false,
+            "description": "0=Domingo .. 6=Sábado"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de providerServices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderServiceListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/service/provider/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string" }
+        }
+      ],
+      "get": {
+        "description": "Buscar providerService por id",
+        "operationId": "getProviderServiceById",
+        "responses": {
+          "200": {
+            "description": "ProviderService",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderServiceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Não encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Soft-delete de providerService",
+        "operationId": "deleteProviderService",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "204": { "description": "Removido" },
+          "400": {
+            "description": "Erro",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "UserRegister": {
+        "type": "object",
+        "required": ["firstName", "lastName", "email", "password"],
+        "properties": {
+          "firstName": { "type": "string", "example": "Nicollas" },
+          "lastName": { "type": "string", "example": "Prado" },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "ex@example.com"
+          },
+          "phone": { "type": "string", "example": "84912345678" },
+          "password": { "type": "string", "example": "StrongP@ssw0rd" }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AuthLoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        }
+      },
+      "AuthTokenResponse": {
+        "type": "object",
+        "properties": { "token": { "type": "string" } }
+      },
+      "ServiceCreateRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": { "name": { "type": "string" } }
+      },
+      "Variant": {
+        "type": "object",
+        "required": ["name", "price", "durationMinutes"],
+        "properties": {
+          "name": { "type": "string" },
+          "price": { "type": "number" },
+          "durationMinutes": { "type": "integer" }
+        }
+      },
+      "Schedule": {
+        "type": "object",
+        "required": ["weekday", "startTime", "endTime"],
+        "properties": {
+          "weekday": { "type": "integer", "minimum": 0, "maximum": 6 },
+          "startTime": { "type": "string", "example": "09:00" },
+          "endTime": { "type": "string", "example": "17:00" }
+        }
+      },
+      "ProviderServiceCreateRequest": {
+        "type": "object",
+        "required": [
+          "description",
+          "providerId",
+          "serviceId",
+          "variants",
+          "schedules"
+        ],
+        "properties": {
+          "description": { "type": "string" },
+          "providerId": { "type": "string" },
+          "serviceId": { "type": "string" },
+          "variants": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Variant" }
+          },
+          "schedules": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Schedule" }
+          }
+        }
+      },
+      "ProviderServiceResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "description": { "type": "string" },
+          "providerId": { "type": "string" },
+          "serviceId": { "type": "string" },
+          "variants": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Variant" }
+          },
+          "schedules": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Schedule" }
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ProviderServiceListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ProviderServiceResponse" }
+          },
+          "totalCount": { "type": "integer" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": { "error": { "type": "string" } }
       }
     }
   }
