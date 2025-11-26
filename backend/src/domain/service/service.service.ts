@@ -168,6 +168,7 @@ export default class ServiceService {
         updatedAt: true,
         deletedAt: true,
         createdAt: true,
+        providerId: true,
       },
     });
 
