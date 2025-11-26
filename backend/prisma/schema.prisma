@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "./generated"
+  provider     = "prisma-client"
+  output       = "./generated"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -44,6 +45,7 @@ model ProviderService {
   updatedAt   DateTime   @updatedAt @map("updated_at")
   deletedAt   DateTime?  @map("deleted_at")
 
+  @@unique([providerId, serviceId])
   @@map("provider_service")
 }
 
@@ -59,12 +61,13 @@ model Variant {
   updatedAt          DateTime            @updatedAt @map("updated_at")
   deletedAt          DateTime?           @map("deleted_at")
 
+  @@unique([providerServiceId, name])
   @@map("variant")
 }
 
 model Schedule {
   id                String          @id @default(uuid())
-  weekday           Int[]
+  weekdays          Int[]
   start             DateTime        @map("start") @db.Time()
   end               DateTime        @map("end") @db.Time()
   providerService   ProviderService @relation(fields: [providerServiceId], references: [id], onDelete: Cascade)
@@ -73,7 +76,7 @@ model Schedule {
   updatedAt         DateTime        @updatedAt @map("updated_at")
   deletedAt         DateTime?       @map("deleted_at")
 
-  @@unique([providerServiceId, weekday])
+  @@unique([providerServiceId, weekdays])
   @@map("schedule")
 }
 
