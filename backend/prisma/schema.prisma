@@ -14,7 +14,7 @@ model User {
   email              String              @unique
   password           String
   phone              String?             @unique
-  providedServices   ProviderService[]
+  providiedServices  ProviderService[]
   contractedServices ContractedService[]
   createdAt          DateTime            @default(now()) @map("created_at")
   updatedAt          DateTime            @updatedAt @map("updated_at")
@@ -32,22 +32,22 @@ model Service {
 }
 
 model ProviderService {
-  id          String            @id @default(uuid())
+  id          String     @id @default(uuid())
   description String
-  provider    User              @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  providerId  String            @map("provider_id")
-  service     Service           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  serviceId   String            @map("service_id")
-  variants    ServiceVariant[]
-  schedules   ServiceSchedule[]
-  createdAt   DateTime          @default(now()) @map("created_at")
-  updatedAt   DateTime          @updatedAt @map("updated_at")
-  deletedAt   DateTime?         @map("deleted_at")
+  provider    User       @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  providerId  String     @map("provider_id")
+  service     Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId   String     @map("service_id")
+  variants    Variant[]
+  schedules   Schedule[]
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  deletedAt   DateTime?  @map("deleted_at")
 
   @@map("provider_service")
 }
 
-model ServiceVariant {
+model Variant {
   id                 String              @id @default(uuid())
   name               String
   price              Int
@@ -59,53 +59,38 @@ model ServiceVariant {
   updatedAt          DateTime            @updatedAt @map("updated_at")
   deletedAt          DateTime?           @map("deleted_at")
 
-  @@map("service_variant")
+  @@map("variant")
+}
+
+model Schedule {
+  id                String          @id @default(uuid())
+  weekday           Int[]
+  start             DateTime        @map("start") @db.Time()
+  end               DateTime        @map("end") @db.Time()
+  providerService   ProviderService @relation(fields: [providerServiceId], references: [id], onDelete: Cascade)
+  providerServiceId String          @map("provider_service_id")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  deletedAt         DateTime?       @map("deleted_at")
+
+  @@unique([providerServiceId, weekday])
+  @@map("schedule")
 }
 
 model ContractedService {
-  id               String                      @id @default(uuid())
-  status           SERVICE_STATUS
-  total_price      Int
-  contractor       User                        @relation(fields: [contractorId], references: [id], onDelete: Cascade)
-  contractorId     String                      @map("contractor_id")
-  schedules        ContractedServiceSchedule[]
-  serviceVariant   ServiceVariant              @relation(fields: [serviceVariantId], references: [id], onDelete: Cascade)
-  serviceVariantId String                      @map("service_variant_id")
-  createdAt        DateTime                    @default(now()) @map("created_at")
-  updatedAt        DateTime                    @updatedAt @map("updated_at")
-  deletedAt        DateTime?                   @map("deleted_at")
+  id           String         @id @default(uuid())
+  status       SERVICE_STATUS
+  total_price  Int
+  contractor   User           @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  contractorId String         @map("contractor_id")
+  date         DateTime
+  variant      Variant        @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variantId    String         @map("variant_id")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  deletedAt    DateTime?      @map("deleted_at")
 
   @@map("contracted_service")
-}
-
-model ServiceSchedule {
-  id                         String                      @id @default(uuid())
-  weekday                    Int
-  startTime                  DateTime                    @map("start_time") @db.Time()
-  endTime                    DateTime                    @map("end_time") @db.Time()
-  providerService            ProviderService             @relation(fields: [providerServiceId], references: [id], onDelete: Cascade)
-  providerServiceId          String                      @map("provider_service_id")
-  contractedServiceSchedules ContractedServiceSchedule[]
-  createdAt                  DateTime                    @default(now()) @map("created_at")
-  updatedAt                  DateTime                    @updatedAt @map("updated_at")
-  deletedAt                  DateTime?                   @map("deleted_at")
-
-  @@unique([providerServiceId, weekday])
-  @@map("service_schedule")
-}
-
-model ContractedServiceSchedule {
-  id                  String            @id @default(uuid())
-  startTime           DateTime          @map("start_time") @db.Time()
-  endTime             DateTime          @map("end_time") @db.Time()
-  serviceSchedule     ServiceSchedule   @relation(fields: [serviceScheduleId], references: [id], onDelete: Cascade)
-  serviceScheduleId   String            @map("service_schedule_id")
-  contractedService   ContractedService @relation(fields: [contractedServiceId], references: [id], onDelete: Cascade)
-  contractedServiceId String            @map("contracted_service_id")
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-
-  @@map("contracted_service_date")
 }
 
 enum SERVICE_STATUS {

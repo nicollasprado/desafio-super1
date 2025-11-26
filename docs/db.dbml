@@ -8,7 +8,7 @@ Table users {
     updated_at timestamp
 }
 
-Table services {
+Table service {
     id varchar [pk]
     name varchar
 }
@@ -16,43 +16,38 @@ Table services {
 Table provider_service {
     id varchar [pk]
     description varchar
+    user_id varchar [ref: > users.id]
+    service_id varchar [ref: - service.id]
     created_at timestamp
     updated_at timestamp
-    user_id varchar [ref: > users.id]
-    service_id varchar [ref: - services.id]
 }
 
-Table service_variants {
+Table variants {
     id varchar [pk]
     name varchar
     price integer
     duration_in_minutes integer
+    provider_service_id varchar [ref: > provider_service.id]
     created_at timestamp
     updated_at timestamp
-    provider_service_id varchar [ref: > provider_service.id]
 }
 
 Table contracted_service {
     id varchar [pk]
     status SERVICE_STATUS
     total_price integer
+    date timestamp
+    contractor_id varchar [ref: - users.id]
+    service_variant_id varchar [ref: > variants.id]
     created_at timestamp
     updated_at timestamp
-    contractor_id varchar [ref: - users.id]
-    service_variant_id varchar [ref: > service_variants.id]
 }
 
-Table contracted_service_schedules {
+Table schedules {
     id varchar [pk]
-    service_schedule_id varchar [ref: > service_schedule.id]
-    contracted_service_id varchar [ref: > contracted_service.id]
-}
-
-Table service_schedule {
-    id varchar [pk]
-    weekday integer
-    start_time time
-    end_time time
+    weekdays integer[]
+    start time
+    end time
     provider_service_id varchar [ref: - provider_service.id]
 }
 
