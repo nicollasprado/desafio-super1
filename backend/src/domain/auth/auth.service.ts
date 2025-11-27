@@ -5,6 +5,9 @@ import InvalidCredentialsException from 'src/shared/exceptions/invalid-credentia
 import UserService from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import IJwtPayload from './dtos/jwt-payload.dto';
+import IUserDetailsDTO from './dtos/user-details.dto';
+import InvalidTokenException from 'src/shared/exceptions/invalid-token.exception';
 
 @Injectable()
 export default class AuthService {
@@ -34,5 +37,21 @@ export default class AuthService {
     const token = this.jwtService.sign(payload);
 
     return { token, expiresIn: this.jwtExpirationTimeInSeconds };
+  }
+
+  async describeMe(token: string): Promise<IUserDetailsDTO> {
+    const payload: IJwtPayload = this.jwtService.verify(token);
+
+    if (!payload || !payload.sub) {
+      throw new InvalidTokenException();
+    }
+
+    const user = await this.userService.findById(payload.sub);
+
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
   }
 }
