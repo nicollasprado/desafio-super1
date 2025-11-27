@@ -19,6 +19,7 @@ import { ConfigService } from '@nestjs/config';
 @Controller('auth')
 export class AuthController {
   private readonly jwtRefreshExpirationTimeInMs: number;
+  private readonly refreshTokenCookieOptions: object;
 
   constructor(
     private readonly authService: AuthService,
@@ -26,6 +27,13 @@ export class AuthController {
   ) {
     this.jwtRefreshExpirationTimeInMs =
       this.configService.get<number>('JWT_REFRESH_EXPIRATION_TIME')! * 1000;
+
+    this.refreshTokenCookieOptions = {
+      httpOnly: true,
+      maxAge: this.jwtRefreshExpirationTimeInMs,
+      sameSite: 'lax',
+      path: '/',
+    };
   }
 
   @HttpCode(HttpStatus.OK)
@@ -37,10 +45,7 @@ export class AuthController {
     const { token, refreshToken, expiresIn } =
       await this.authService.signIn(data);
 
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      maxAge: this.jwtRefreshExpirationTimeInMs,
-    });
+    res.cookie('refresh_token', refreshToken, this.refreshTokenCookieOptions);
 
     return { token, expiresIn };
   }
@@ -73,10 +78,7 @@ export class AuthController {
       expiresIn,
     } = await this.authService.refresh(token);
 
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      maxAge: this.jwtRefreshExpirationTimeInMs,
-    });
+    res.cookie('refresh_token', refreshToken, this.refreshTokenCookieOptions);
 
     return { token: newToken, expiresIn };
   }
@@ -84,6 +86,12 @@ export class AuthController {
   @Get('logout')
   logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('refresh_token');
+
+    res.cookie('refresh_token', '', {
+      ...this.refreshTokenCookieOptions,
+      maxAge: 0,
+    });
+
     return;
   }
 }
