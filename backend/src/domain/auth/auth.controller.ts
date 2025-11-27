@@ -45,7 +45,9 @@ export class AuthController {
     const { token, refreshToken, expiresIn } =
       await this.authService.signIn(data);
 
-    res.cookie('refresh_token', refreshToken, this.refreshTokenCookieOptions);
+    if (data.rememberMe) {
+      res.cookie('refresh_token', refreshToken, this.refreshTokenCookieOptions);
+    }
 
     return { token, expiresIn };
   }
