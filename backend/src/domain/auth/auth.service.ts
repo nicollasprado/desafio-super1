@@ -80,7 +80,6 @@ export default class AuthService {
         throw new InvalidTokenException();
       }
 
-      console.log(err);
       throw new InternalServerErrorException();
     }
   }
@@ -105,7 +104,6 @@ export default class AuthService {
         throw new InvalidTokenException();
       }
 
-      console.log(err);
       throw new InternalServerErrorException();
     }
   }
