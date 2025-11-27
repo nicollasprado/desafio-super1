@@ -5,9 +5,10 @@
 
   let modalVisible = $state(false)
   let error = $state('')
+  let firstName = $state('')
+  let lastName = $state('')
   let email = $state('')
   let password = $state('')
-  let rememberMe = $state(false)
 
   async function handleLogin(e: Event) {
     e.preventDefault()
@@ -18,12 +19,9 @@
       const res = await api.axios.post(`/auth/login`, {
         email,
         password,
-        rememberMe,
       })
 
       if (res.status === 200) {
-        const { token } = res.data
-        api.setAccessToken(token)
         modalVisible = false
         location.reload()
       } else {
@@ -39,20 +37,32 @@
   }
 </script>
 
-<Button size="sm" type="button" class="cursor-pointer" onclick={() => (modalVisible = true)}
-  >Login</Button
+<Button size="xs" outline color="dark" class="cursor-pointer" onclick={() => (modalVisible = true)}
+  >Cadastro</Button
 >
 
 <Modal bind:open={modalVisible} size="xs">
   <form onsubmit={handleLogin}>
     <div class="flex flex-col space-y-6">
-      <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Bem vindo(a) de volta!</h3>
+      <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Criar conta</h3>
 
-      <p class="text-[0.95rem]">Por favor, insira suas credenciais para continuar.</p>
+      <p class="text-[0.95rem]">Preencha os campos abaixo para criar sua conta.</p>
 
       {#if error}
         <Label color="red">{error}</Label>
       {/if}
+
+      <div class="flex gap-10">
+        <Label class="space-y-2">
+          <span>Nome</span>
+          <Input type="text" bind:value={firstName} required />
+        </Label>
+
+        <Label class="space-y-2">
+          <span>Sobrenome</span>
+          <Input type="text" bind:value={lastName} required />
+        </Label>
+      </div>
 
       <Label class="space-y-2">
         <span>Email</span>
@@ -64,14 +74,7 @@
         <Input type="password" bind:value={password} required />
       </Label>
 
-      <div class="flex items-start">
-        <Checkbox bind:checked={rememberMe}>Lembrar-me</Checkbox>
-        <a href="/" class="text-primary-700 dark:text-primary-500 ms-auto text-sm hover:underline"
-          >Esqueceu a senha?</a
-        >
-      </div>
-
-      <Button type="submit">Conectar</Button>
+      <Button type="submit">Cadastrar</Button>
     </div>
   </form>
 </Modal>
