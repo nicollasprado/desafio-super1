@@ -10,10 +10,10 @@ import {
 } from '@nestjs/common';
 import { SignInDto } from './dtos/sign-in.dto';
 import AuthService from './auth.service';
-import extractTokenFromHeader from 'src/util/extractTokenFromHeader';
+import extractTokenFromHeader from 'src/shared/util/extractTokenFromHeader';
 import InvalidTokenException from 'src/shared/exceptions/invalid-token.exception';
 import type { Request, Response } from 'express';
-import extractTokenFromCookies from 'src/util/extractTokenFromCookies';
+import extractTokenFromCookies from 'src/shared/util/extractTokenFromCookies';
 import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')

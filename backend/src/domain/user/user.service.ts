@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import prisma from 'src/lib/prisma';
+import prisma from 'src/infra/lib/prisma';
 import InUseException from 'src/shared/exceptions/in-use.exception';
-import hashPassword from 'src/util/hashPassword';
+import hashPassword from 'src/shared/util/hashPassword';
 import { TCreateUserDto } from './dtos/create-user.dto';
 import { TUserDTO } from './dtos/user.dto';
 import NotFoundException from 'src/shared/exceptions/not-found-exception';

@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import InvalidTokenException from 'src/shared/exceptions/invalid-token.exception';
 import IJwtPayload from './dtos/jwt-payload.dto';
-import extractTokenFromHeader from 'src/util/extractTokenFromHeader';
+import extractTokenFromHeader from 'src/shared/util/extractTokenFromHeader';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

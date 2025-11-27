@@ -75,12 +75,8 @@ export default class AuthService {
         refreshToken: newRefreshToken,
         expiresIn: this.jwtExpirationTimeInSeconds,
       };
-    } catch (err) {
-      if (err instanceof TokenExpiredError) {
-        throw new InvalidTokenException();
-      }
-
-      throw new InternalServerErrorException();
+    } catch {
+      throw new InvalidTokenException();
     }
   }
 
@@ -99,12 +95,8 @@ export default class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
       };
-    } catch (err) {
-      if (err instanceof TokenExpiredError) {
-        throw new InvalidTokenException();
-      }
-
-      throw new InternalServerErrorException();
+    } catch {
+      throw new InvalidTokenException();
     }
   }
 }

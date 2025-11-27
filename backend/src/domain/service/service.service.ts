@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { TCreateServiceDTO } from './dtos/create-service.dto';
-import prisma from 'src/lib/prisma';
+import prisma from 'src/infra/lib/prisma';
 import AlreadyExistsException from 'src/shared/exceptions/already-exists.exception';
 import IServiceDTO from './dtos/service.dto';
 import UserService from '../user/user.service';
