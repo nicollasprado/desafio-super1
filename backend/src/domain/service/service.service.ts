@@ -8,6 +8,7 @@ import { TProvideServiceDTO } from './dtos/provide-service.dto';
 import NotFoundException from 'src/shared/exceptions/not-found-exception';
 import { TGetAllProvided } from './dtos/get-all-provided-services.dto';
 import { TContractServiceDTO } from './dtos/contract-service.dto';
+import { TAvailabilityDTO } from './dtos/availability.dto';
 
 @Injectable()
 export default class ServiceService {
@@ -71,6 +72,37 @@ export default class ServiceService {
         variants: {
           create: variants,
         },
+      },
+      include: {
+        provider: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        schedules: {
+          select: {
+            id: true,
+            weekday: true,
+            start: true,
+            end: true,
+          },
+        },
+        variants: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            durationMinutes: true,
+          },
+        },
+      },
+      omit: {
+        deletedAt: true,
+        updatedAt: true,
+        providerId: true,
+        serviceId: true,
       },
     });
 
@@ -183,16 +215,20 @@ export default class ServiceService {
     };
   }
 
-  async contract({ contractorId, date, variantId }: TContractServiceDTO) {
+  async contract({ contractorId, start, variantId }: TContractServiceDTO) {
     await this.userService.findById(contractorId);
 
     const variant = await this.getVariantById(variantId);
+
+    const end = new Date(start);
+    end.setMinutes(end.getMinutes() + variant.durationMinutes);
 
     const newContractedService = await prisma.contractedService.create({
       data: {
         contractorId,
         variantId,
-        date,
+        start,
+        end,
         status: 'WAITING_CONFIRMATION',
         total_price: variant.price,
       },
@@ -222,5 +258,175 @@ export default class ServiceService {
     });
 
     return updatedProviderService;
+  }
+
+  async getAvailability(providerServiceId: string) {
+    const providerService = await prisma.providerService.findUnique({
+      where: { id: providerServiceId, deletedAt: null },
+      include: {
+        schedules: true,
+        variants: true,
+      },
+    });
+
+    if (!providerService) {
+      throw new NotFoundException('provider service');
+    }
+
+    const variantsIds = providerService.variants.map((variant) => variant.id);
+
+    const nextThirtyDatesContractedServices =
+      await prisma.contractedService.findMany({
+        where: {
+          deletedAt: null,
+          variantId: { in: variantsIds },
+          status: 'SCHEDULED',
+          start: { gte: new Date() },
+        },
+      });
+
+    if (!nextThirtyDatesContractedServices) {
+      throw new NotFoundException('contracted services');
+    }
+
+    const weekdayAvailability: Record<
+      number,
+      { startTime: Date; endTime: Date }
+    > = {};
+
+    providerService.schedules.forEach((schedule) => {
+      const weekday = Number(schedule.weekday);
+
+      weekdayAvailability[weekday] = {
+        startTime: new Date(schedule.start),
+        endTime: new Date(schedule.end),
+      };
+    });
+
+    const availability: TAvailabilityDTO = {};
+
+    const getDateKey = (date: Date) => date.toISOString().slice(0, 10); // YYYY-MM-DD
+    const getTimeKey = (date: Date) =>
+      date
+        .toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        })
+        .slice(0, 5); // HH:MM
+
+    // For each 30min slot in contracted services, mark as unavailable
+    const addAllInUseStarts = (dateKey: string, start: Date, end: Date) => {
+      const availabilityItem = availability[dateKey];
+
+      if (!availabilityItem) return;
+
+      const thirtyMinutesInMs = 1000 * 60 * 30;
+      const thirtyMinutesQtd = Math.ceil(
+        (end.getTime() - start.getTime()) / thirtyMinutesInMs,
+      );
+
+      for (let i = 0; i < thirtyMinutesQtd; i++) {
+        const contractedStart = new Date(
+          start.getTime() + i * thirtyMinutesInMs,
+        );
+        const timeString = getTimeKey(contractedStart);
+
+        availabilityItem.contractedStarts[timeString] = false;
+      }
+    };
+
+    const fillMissingStarts = (date: Date, startTime: Date, endTime: Date) => {
+      const dateKey = getDateKey(date);
+      const availabilityItem = availability[dateKey];
+
+      if (!availabilityItem) return;
+
+      const thirtyMinutesInMs = 1000 * 60 * 30;
+      const thirtyMinutesQtd = Math.ceil(
+        (endTime.getTime() - startTime.getTime()) / thirtyMinutesInMs,
+      );
+
+      for (let i = 0; i < thirtyMinutesQtd; i++) {
+        const contractedStart = new Date(
+          startTime.getTime() + i * thirtyMinutesInMs,
+        );
+
+        const timeKey = getTimeKey(contractedStart);
+        const timeItem = availabilityItem.contractedStarts[timeKey];
+
+        if (!timeItem) {
+          availabilityItem.contractedStarts[timeKey] = true;
+        }
+      }
+    };
+
+    nextThirtyDatesContractedServices.forEach((contractedService) => {
+      const start: Date = new Date(contractedService.start);
+      const end: Date = new Date(contractedService.end);
+      const dateKey = getDateKey(start);
+      const availabilityItem = availability[dateKey];
+
+      if (availabilityItem) {
+        addAllInUseStarts(dateKey, start, end);
+        return;
+      }
+
+      availability[dateKey] = {
+        day: start.getDate(),
+        weekDay: start
+          .toLocaleDateString('pt-BR', { weekday: 'short' })
+          .split('.')[0],
+        month: start
+          .toLocaleDateString('pt-BR', { month: 'short' })
+          .split('.')[0],
+        value: start,
+        contractedStarts: {},
+      };
+      addAllInUseStarts(dateKey, start, end);
+    });
+
+    // Fill remaining days in next 30 days
+    Array.from({ length: 30 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() + i + 1);
+      const dateKey = getDateKey(date);
+
+      const availabilityItem = availability[dateKey];
+
+      const weekday = date.getDay();
+      const daySchedule = weekdayAvailability[weekday];
+
+      if (!daySchedule) return;
+
+      if (availabilityItem) {
+        fillMissingStarts(date, daySchedule.startTime, daySchedule.endTime);
+        return;
+      }
+
+      const day = date.getDate();
+
+      let weekDay = date
+        .toLocaleDateString('pt-BR', { weekday: 'short' })
+        .split('.')[0];
+      weekDay = weekDay.charAt(0).toUpperCase() + weekDay.slice(1);
+
+      let month = date
+        .toLocaleDateString('pt-BR', { month: 'short' })
+        .split('.')[0];
+      month = month.charAt(0).toUpperCase() + month.slice(1);
+
+      availability[dateKey] = {
+        day,
+        weekDay,
+        month,
+        value: date,
+        contractedStarts: {},
+      };
+
+      fillMissingStarts(date, daySchedule.startTime, daySchedule.endTime);
+    });
+
+    return availability;
   }
 }

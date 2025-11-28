@@ -1,9 +1,11 @@
-import { IsISO8601, IsUUID } from 'class-validator';
+import { IsDateString, IsUUID } from 'class-validator';
 
-export class ContractServiceDto {
+export class ContractServiceBodyDto {
   @IsUUID() contractorId: string;
-  @IsUUID() variantId: string;
-  @IsISO8601() date: string;
+  @IsDateString()
+  start: string;
 }
 
-export type TContractServiceDTO = InstanceType<typeof ContractServiceDto>;
+export type TContractServiceDTO = InstanceType<
+  typeof ContractServiceBodyDto
+> & { variantId: string };

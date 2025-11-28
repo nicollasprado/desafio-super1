@@ -12,7 +12,7 @@ import { CreateServiceDto } from './dtos/create-service.dto';
 import ServiceService from './service.service';
 import { ProvideServiceDto } from './dtos/provide-service.dto';
 import { GetAllProvidedQueryDto } from './dtos/get-all-provided-services.dto';
-import { ContractServiceDto } from './dtos/contract-service.dto';
+import { ContractServiceBodyDto } from './dtos/contract-service.dto';
 import { AuthGuard } from '../auth/auth.guard';
 
 @UseGuards(AuthGuard)
@@ -46,9 +46,12 @@ export default class ServiceController {
     });
   }
 
-  @Post('contract')
-  async contract(@Body() data: ContractServiceDto) {
-    return await this.serviceService.contract(data);
+  @Post('provided/variant/:variantId/contract')
+  async contract(
+    @Param('variantId') variantId: string,
+    @Body() data: ContractServiceBodyDto,
+  ) {
+    return await this.serviceService.contract({ ...data, variantId });
   }
 
   @Delete('provided/:id')
@@ -59,5 +62,10 @@ export default class ServiceController {
   @Get('provided/:id')
   async getProvidedServiceById(@Param('id') id: string) {
     return await this.serviceService.getProviderServiceById(id);
+  }
+
+  @Get('provided/:id/availability')
+  async getAvailability(@Param('id') id: string) {
+    return await this.serviceService.getAvailability(id);
   }
 }

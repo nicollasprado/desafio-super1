@@ -69,16 +69,16 @@ model Variant {
 
 model Schedule {
   id                String          @id @default(uuid())
-  weekdays          Int[]
-  start             DateTime        @map("start") @db.Time()
-  end               DateTime        @map("end") @db.Time()
+  weekday           Int            // 0 (Monday) to 6 (Sunday)
+  start             DateTime
+  end               DateTime
   providerService   ProviderService @relation(fields: [providerServiceId], references: [id], onDelete: Cascade)
   providerServiceId String          @map("provider_service_id")
   createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt         DateTime        @updatedAt @map("updated_at")
   deletedAt         DateTime?       @map("deleted_at")
 
-  @@unique([providerServiceId, weekdays])
+  @@unique([providerServiceId, weekday])
   @@map("schedule")
 }
 
@@ -88,7 +88,8 @@ model ContractedService {
   total_price  Int
   contractor   User           @relation(fields: [contractorId], references: [id], onDelete: Cascade)
   contractorId String         @map("contractor_id")
-  date         DateTime
+  start        DateTime
+  end          DateTime
   variant      Variant        @relation(fields: [variantId], references: [id], onDelete: Cascade)
   variantId    String         @map("variant_id")
   createdAt    DateTime       @default(now()) @map("created_at")

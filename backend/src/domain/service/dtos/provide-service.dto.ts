@@ -1,9 +1,9 @@
 import { Type } from 'class-transformer';
 import {
-  ArrayNotEmpty,
   IsArray,
+  IsDateString,
   IsInt,
-  IsISO8601,
+  IsNumber,
   IsString,
   IsUUID,
   Max,
@@ -18,15 +18,15 @@ class VariantDto {
 }
 
 class ScheduleDto {
-  @IsArray()
-  @ArrayNotEmpty()
-  @Type(() => Number)
-  @IsInt({ each: true })
-  @Min(0, { each: true })
-  @Max(6, { each: true })
-  weekdays: number[];
-  @IsISO8601() start: string;
-  @IsISO8601() end: string;
+  @IsNumber()
+  @IsInt()
+  @Min(0)
+  @Max(6)
+  weekday: number;
+  @IsDateString()
+  start: string;
+  @IsDateString()
+  end: string;
 }
 
 export class ProvideServiceDto {
