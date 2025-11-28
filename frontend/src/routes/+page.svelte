@@ -1,5 +1,33 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
+  import Filter from './Filter.svelte'
   import Header from './Header.svelte'
+  import type IProviderService from '$lib/interfaces/IProviderService'
+  import api from '$lib/AxiosService'
+  import ServiceCard from './ServiceCard.svelte'
+
+  let providerServices: IProviderService[] = $state([])
+
+  interface IProviderServiceResponse {
+    data: IProviderService[]
+    pagination: {
+      totalCount: number
+      currentPage: number
+      perPage: number
+      totalPages: number
+    }
+  }
+
+  onMount(async () => {
+    const response = await api.axios.get<IProviderServiceResponse>('/service/provided', {
+      params: {
+        page: 1,
+        limit: 10,
+      },
+    })
+
+    providerServices = response.data.data
+  })
 </script>
 
 <svelte:head>
@@ -8,5 +36,19 @@
 
 <div class="flex w-full flex-col h-full">
   <Header />
-  <main class="p-4 bg-gray-100 h-full"></main>
+
+  <div class="p-4 bg-gray-100 h-full">
+    <div class="flex flex-col gap-10">
+      <Filter />
+      <main>
+        <ol>
+          {#each providerServices as providerService (providerService.id)}
+            <li>
+              <ServiceCard {providerService} />
+            </li>
+          {/each}
+        </ol>
+      </main>
+    </div>
+  </div>
 </div>
