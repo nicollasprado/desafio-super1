@@ -92,4 +92,26 @@ export default class UserService {
 
     return user;
   }
+
+  async updateAvatar(userId: string, avatarUrl: string): Promise<TUserDTO> {
+    await this.findById(userId);
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: userId,
+        deletedAt: null,
+      },
+      data: {
+        avatarUrl,
+      },
+      omit: {
+        password: true,
+        createdAt: true,
+        deletedAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return updatedUser;
+  }
 }

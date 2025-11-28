@@ -1,9 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { TSignInDTO } from './dtos/sign-in.dto';
 import { compare } from 'bcrypt';
 import InvalidCredentialsException from 'src/shared/exceptions/invalid-credentials.exception';
 import UserService from '../user/user.service';
-import { JwtService, TokenExpiredError } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import IJwtPayload from './dtos/jwt-payload.dto';
 import IUserDetailsDTO from './dtos/user-details.dto';
@@ -90,11 +90,7 @@ export default class AuthService {
 
       const user = await this.userService.findById(payload.sub);
 
-      return {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-      };
+      return user;
     } catch {
       throw new InvalidTokenException();
     }

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import UserModule from './domain/user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { ServiceModule } from './domain/service/service.module';
+import { UploadModule } from './domain/upload/upload.module';
 import AuthModule from './domain/auth/auth.module';
 import * as Joi from 'joi';
 
@@ -20,6 +21,7 @@ import * as Joi from 'joi';
     UserModule,
     AuthModule,
     ServiceModule,
+    UploadModule,
   ],
   controllers: [],
   providers: [],
