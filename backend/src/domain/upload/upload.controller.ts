@@ -10,15 +10,11 @@ import { UploadService } from './upload.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { TFileDTO } from './dtos/upload.dto';
 import { AuthGuard } from '../auth/auth.guard';
-import UserService from '../user/user.service';
 
 @UseGuards(AuthGuard)
 @Controller('upload')
 export class UploadController {
-  constructor(
-    private readonly uploadService: UploadService,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly uploadService: UploadService) {}
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
@@ -33,11 +29,21 @@ export class UploadController {
     @Param('userId') userId: string,
     @UploadedFile() file: TFileDTO,
   ): Promise<{ url: string }> {
-    await this.userService.findById(userId);
-
     const fileUrl = await this.uploadService.uploadAvatar(file, userId);
+    return { url: fileUrl };
+  }
 
-    await this.userService.updateAvatar(userId, fileUrl);
+  @Post('provided-service-image/:providerServiceId')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadServiceImage(
+    @Param('providerServiceId') providerServiceId: string,
+    @UploadedFile() file: TFileDTO,
+  ): Promise<{ url: string }> {
+    const fileUrl = await this.uploadService.uploadProviderServiceImage(
+      file,
+      providerServiceId,
+    );
+
     return { url: fileUrl };
   }
 }

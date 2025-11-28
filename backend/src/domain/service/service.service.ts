@@ -205,8 +205,22 @@ export default class ServiceService {
     const providerService = await this.getProviderServiceById(id);
 
     await prisma.providerService.update({
-      where: { id: providerService.id },
+      where: { id: providerService.id, deletedAt: null },
       data: { deletedAt: new Date() },
     });
+  }
+
+  async addProvidedServiceImage(providerServiceId: string, imageUrl: string) {
+    const providerService =
+      await this.getProviderServiceById(providerServiceId);
+
+    const updatedProviderService = await prisma.providerService.update({
+      where: { id: providerService.id, deletedAt: null },
+      data: {
+        imagesUrls: { push: imageUrl },
+      },
+    });
+
+    return updatedProviderService;
   }
 }

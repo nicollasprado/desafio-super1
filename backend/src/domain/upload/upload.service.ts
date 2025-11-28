@@ -2,10 +2,16 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { TFileDTO } from './dtos/upload.dto';
 import supabase from 'src/infra/lib/supabase';
 import { ConfigService } from '@nestjs/config';
+import UserService from '../user/user.service';
+import ServiceService from '../service/service.service';
 
 @Injectable()
 export class UploadService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly userService: UserService,
+    private readonly serviceService: ServiceService,
+  ) {}
 
   async upload(
     file: TFileDTO,
@@ -39,11 +45,36 @@ export class UploadService {
   }
 
   async uploadAvatar(file: TFileDTO, userId: string): Promise<string> {
+    await this.userService.findById(userId);
+
     const fileExtension = file.originalname.split('.')[1];
     const fileUrl = await this.upload(file, `avatar.${fileExtension}`, userId);
 
     const finalFileUrl = `${fileUrl}?width=50&height=50`;
 
+    await this.userService.updateAvatar(userId, finalFileUrl);
+
     return finalFileUrl;
+  }
+
+  async uploadProviderServiceImage(
+    file: TFileDTO,
+    providerServiceId: string,
+  ): Promise<string> {
+    const providerService =
+      await this.serviceService.getProviderServiceById(providerServiceId);
+
+    const fileUrl = await this.upload(
+      file,
+      undefined,
+      `${providerService.providerId}/providedServices/${providerServiceId}`,
+    );
+
+    await this.serviceService.addProvidedServiceImage(
+      providerServiceId,
+      fileUrl,
+    );
+
+    return fileUrl;
   }
 }
