@@ -2,7 +2,7 @@ export type TAvailabilityItem = {
   day: number;
   weekDay: string;
   month: string;
-  value: Date;
+  date: string;
   contractedStarts: Record<string, boolean>;
 };
 

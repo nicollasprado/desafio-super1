@@ -380,7 +380,7 @@ export default class ServiceService {
         month: start
           .toLocaleDateString('pt-BR', { month: 'short' })
           .split('.')[0],
-        value: start,
+        date: dateKey,
         contractedStarts: {},
       };
       addAllInUseStarts(dateKey, start, end);
@@ -420,7 +420,7 @@ export default class ServiceService {
         day,
         weekDay,
         month,
-        value: date,
+        date: dateKey,
         contractedStarts: {},
       };
 
