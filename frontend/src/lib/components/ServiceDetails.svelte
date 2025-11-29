@@ -93,8 +93,10 @@
 
 <Button class="cursor-pointer" onclick={() => (modalVisible = true)}>Ver detalhes</Button>
 
-<Modal bind:open={modalVisible} size="xl" title="Detalhes do Serviço" class="z-1">
-  <Toaster position="top-center" />
+<Modal bind:open={modalVisible} size="lg" title="Detalhes do Serviço" class="z-1">
+  <div class="absolute">
+    <Toaster position="top-center" />
+  </div>
 
   <div class="flex gap-2 items-center">
     {#if providerService.provider.avatarUrl !== null}
@@ -124,7 +126,7 @@
 
   <div class="flex flex-col gap-4">
     <div class="border border-[#cacaca] rounded-lg">
-      <Carousel {images} style="height: 30dvh;">
+      <Carousel {images} style="height: 40dvh;">
         <Controls />
         <CarouselIndicators />
       </Carousel>
