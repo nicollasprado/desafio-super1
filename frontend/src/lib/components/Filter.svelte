@@ -9,6 +9,26 @@
   let search: string = $state('')
   let selectedService: string = $state('')
 
+  interface Props {
+    handleSearchChange: (search: string) => void
+    handleServiceIdChange: (serviceId: string) => void
+  }
+
+  let { handleSearchChange, handleServiceIdChange }: Props = $props()
+
+  $effect(() => {
+    search
+    const timer = setTimeout(() => {
+      handleSearchChange(search)
+    }, 500)
+
+    return () => clearTimeout(timer)
+  })
+
+  $effect(() => {
+    handleServiceIdChange(selectedService)
+  })
+
   onMount(async () => {
     const res = await api.axios.get<IService[]>('/service')
 

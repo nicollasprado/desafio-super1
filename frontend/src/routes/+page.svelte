@@ -6,7 +6,16 @@
   import Filter from '$lib/components/Filter.svelte'
   import ServiceCard from '$lib/components/ServiceCard.svelte'
 
+  interface IFilters {
+    search?: string
+    serviceId?: string
+  }
+
   let providerServices: IProviderService[] = $state([])
+  let filters: IFilters = $state({
+    search: undefined,
+    serviceId: undefined,
+  })
 
   interface IProviderServiceResponse {
     data: IProviderService[]
@@ -19,15 +28,50 @@
   }
 
   onMount(async () => {
-    const response = await api.axios.get<IProviderServiceResponse>('/service/provided', {
+    const res = await api.axios.get<IProviderServiceResponse>('/service/provided', {
       params: {
         page: 1,
         limit: 10,
       },
     })
 
-    providerServices = response.data.data
+    providerServices = res.data.data
   })
+
+  $effect(() => {
+    filters
+
+    const fetchData = async () => {
+      let params: IFilters & { page: number; limit: number } = {
+        page: 1,
+        limit: 10,
+      }
+
+      if (filters.search) {
+        params = { ...params, search: filters.search }
+      }
+
+      if (filters.serviceId) {
+        params = { ...params, serviceId: filters.serviceId }
+      }
+
+      const res = await api.axios.get<IProviderServiceResponse>('/service/provided', {
+        params,
+      })
+
+      providerServices = res.data.data
+    }
+
+    fetchData()
+  })
+
+  const handleSearchChange = (newSearch: string) => {
+    filters.search = newSearch
+  }
+
+  const handleServiceIdChange = (newServiceId: string) => {
+    filters.serviceId = newServiceId
+  }
 </script>
 
 <svelte:head>
@@ -39,7 +83,7 @@
 
   <div class="p-4 bg-gray-100 h-full">
     <div class="flex flex-col gap-10">
-      <Filter />
+      <Filter {handleSearchChange} {handleServiceIdChange} />
       <main>
         <ol>
           {#each providerServices as providerService (providerService.id)}
