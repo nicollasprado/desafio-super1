@@ -363,28 +363,6 @@ export default class ServiceService {
       }
     };
 
-    nextThirtyDatesContractedServices.forEach((contractedService) => {
-      const start = new Date(contractedService.start);
-      const end = new Date(contractedService.end);
-      const dateKey = getDateKey(start);
-
-      if (!availability[dateKey]) {
-        availability[dateKey] = {
-          day: start.getDate(),
-          weekDay: start
-            .toLocaleDateString('pt-BR', { weekday: 'short' })
-            .split('.')[0],
-          month: start
-            .toLocaleDateString('pt-BR', { month: 'short' })
-            .split('.')[0],
-          date: dateKey,
-          contractedStarts: {},
-        };
-      }
-
-      addAllInUseStarts(dateKey, start, end);
-    });
-
     Array.from({ length: 30 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() + i + 1);
@@ -411,6 +389,28 @@ export default class ServiceService {
       }
 
       fillMissingStarts(date, daySchedule.startTime, daySchedule.endTime);
+    });
+
+    nextThirtyDatesContractedServices.forEach((contractedService) => {
+      const start = new Date(contractedService.start);
+      const end = new Date(contractedService.end);
+      const dateKey = getDateKey(start);
+
+      if (!availability[dateKey]) {
+        availability[dateKey] = {
+          day: start.getDate(),
+          weekDay: start
+            .toLocaleDateString('pt-BR', { weekday: 'short' })
+            .split('.')[0],
+          month: start
+            .toLocaleDateString('pt-BR', { month: 'short' })
+            .split('.')[0],
+          date: dateKey,
+          contractedStarts: {},
+        };
+      }
+
+      addAllInUseStarts(dateKey, start, end);
     });
 
     return availability;
