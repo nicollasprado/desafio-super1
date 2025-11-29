@@ -12,6 +12,42 @@ import { TAvailabilityDTO } from './dtos/availability.dto';
 import { TGetAllContracted } from './dtos/get-all-contracted-services.dto';
 import ServiceSearchService from '../search/service-search.service';
 
+const GetProviderServiceSelect = {
+  id: true,
+  description: true,
+  imagesUrls: true,
+  service: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  provider: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      avatarUrl: true,
+    },
+  },
+  variants: {
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      durationMinutes: true,
+    },
+  },
+  schedules: {
+    select: {
+      id: true,
+      weekday: true,
+      start: true,
+      end: true,
+    },
+  },
+};
+
 @Injectable()
 export default class ServiceService {
   constructor(
@@ -79,41 +115,7 @@ export default class ServiceService {
             create: variants,
           },
         },
-        select: {
-          id: true,
-          description: true,
-          imagesUrls: true,
-          service: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          provider: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              avatarUrl: true,
-            },
-          },
-          variants: {
-            select: {
-              id: true,
-              name: true,
-              price: true,
-              durationMinutes: true,
-            },
-          },
-          schedules: {
-            select: {
-              id: true,
-              weekday: true,
-              start: true,
-              end: true,
-            },
-          },
-        },
+        select: GetProviderServiceSelect,
       });
 
       await this.serviceSearchService.indexProvidedService(
@@ -277,6 +279,11 @@ export default class ServiceService {
         imagesUrls: { push: imageUrl },
       },
     });
+
+    await this.serviceSearchService.updateProvidedServiceImages(
+      providerServiceId,
+      updatedProviderService.imagesUrls,
+    );
 
     return updatedProviderService;
   }

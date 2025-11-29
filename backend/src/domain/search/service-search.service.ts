@@ -87,4 +87,17 @@ export default class ServiceSearchService {
       },
     };
   }
+
+  async updateProvidedServiceImages(
+    providerServiceId: string,
+    imagesUrls: string[],
+  ) {
+    return await this.esService.update({
+      index: 'provider-services',
+      id: providerServiceId,
+      doc: {
+        imagesUrls,
+      },
+    });
+  }
 }
