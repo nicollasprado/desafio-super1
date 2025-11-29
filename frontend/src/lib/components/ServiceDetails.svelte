@@ -50,6 +50,21 @@
   }
 
   const handleContract = async () => {
+    let contractorId = ''
+    try {
+      const resMe = await api.axios.get<IUser>('/auth/me')
+
+      if (resMe.status !== 200) {
+        toast.error('Erro interno, tente novamente mais tarde')
+        return
+      }
+
+      contractorId = resMe.data.id
+    } catch {
+      toast.error('Faça o login para contratar um serviço')
+      return
+    }
+
     const errors: string[] = []
 
     if (!selectedDate) errors.push('Selecione uma data')
@@ -60,11 +75,6 @@
       toast.error(errors.join(', '))
       return
     }
-
-    const resMe = await api.axios.get<IUser>('/auth/me')
-
-    if (resMe.status !== 200) return
-    const contractorId = resMe.data.id
 
     const [year, month, day] = selectedDate.split('-').map(Number)
     const [hour, minute] = selectedTime.split(':').map(Number)
