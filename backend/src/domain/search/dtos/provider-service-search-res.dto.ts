@@ -1,3 +1,5 @@
+import { TPagination } from 'src/shared/types/TPagination';
+
 export interface IIndexProviderServiceDTO {
   id: string;
   description: string;
@@ -28,10 +30,5 @@ export interface IIndexProviderServiceDTO {
 
 export interface IProviderServiceSearchResDTO {
   data: IIndexProviderServiceDTO[];
-  pagination: {
-    totalCount: number;
-    currentPage: number;
-    perPage: number;
-    totalPages: number;
-  };
+  pagination: TPagination;
 }

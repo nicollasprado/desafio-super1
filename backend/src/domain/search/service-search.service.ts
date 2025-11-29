@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { IIndexProviderServiceDTO } from './dtos/provider-service-search-res.dto';
 import { TGetAllProvided } from '../service/dtos/get-all-provided-services.dto';
+import IIndexContractedServiceDTO from './dtos/contracted-service-search-res.dto';
+import INDEXES from 'src/shared/consts/INDEXES';
+import { TGetAllContracted } from '../service/dtos/get-all-contracted-services.dto';
+import { TServiceStatus } from 'src/shared/types/TServiceStatus';
 
 @Injectable()
 export default class ServiceSearchService {
@@ -12,7 +16,7 @@ export default class ServiceSearchService {
     serviceData: IIndexProviderServiceDTO,
   ) {
     return await this.esService.index({
-      index: 'provider-services',
+      index: INDEXES.PROVIDER_SERVICES,
       id: providerServiceId,
       document: serviceData,
     });
@@ -20,7 +24,7 @@ export default class ServiceSearchService {
 
   async removeProvidedServiceIndex(providerServiceId: string) {
     return await this.esService.delete({
-      index: 'provider-services',
+      index: INDEXES.PROVIDER_SERVICES,
       id: providerServiceId,
     });
   }
@@ -49,14 +53,14 @@ export default class ServiceSearchService {
     if (serviceId) {
       must.push({
         term: {
-          'service.id.keyword': serviceId,
+          'service.id': serviceId,
         },
       });
     }
 
     if (providerId) {
       must.push({
-        match: {
+        term: {
           'provider.id': providerId,
         },
       });
@@ -65,7 +69,7 @@ export default class ServiceSearchService {
     const query = must.length > 0 ? { bool: { must } } : { match_all: {} };
 
     const result = await this.esService.search({
-      index: 'provider-services',
+      index: INDEXES.PROVIDER_SERVICES,
       from,
       size: limit,
       query,
@@ -98,10 +102,98 @@ export default class ServiceSearchService {
     imagesUrls: string[],
   ) {
     return await this.esService.update({
-      index: 'provider-services',
+      index: INDEXES.PROVIDER_SERVICES,
       id: providerServiceId,
       doc: {
         imagesUrls,
+      },
+    });
+  }
+
+  async indexContractedService(
+    contractedServiceId: string,
+    contractedServiceData: IIndexContractedServiceDTO,
+  ) {
+    return await this.esService.index({
+      index: INDEXES.CONTRACTED_SERVICES,
+      id: contractedServiceId,
+      document: contractedServiceData,
+    });
+  }
+
+  async removeContractedServiceIndex(contractedServiceId: string) {
+    return await this.esService.delete({
+      index: INDEXES.CONTRACTED_SERVICES,
+      id: contractedServiceId,
+    });
+  }
+
+  async searchContractedServices({
+    contractorId,
+    providerId,
+    page,
+    limit,
+  }: TGetAllContracted) {
+    const from = (page - 1) * limit;
+
+    const must: any[] = [];
+
+    if (contractorId) {
+      must.push({
+        term: {
+          'contractor.id': contractorId,
+        },
+      });
+    }
+
+    if (providerId) {
+      must.push({
+        term: {
+          'variant.providerService.provider.id': providerId,
+        },
+      });
+    }
+
+    const query = must.length > 0 ? { bool: { must } } : { match_all: {} };
+
+    const result = await this.esService.search({
+      index: INDEXES.CONTRACTED_SERVICES,
+      from,
+      size: limit,
+      query,
+    });
+
+    if (!result.hits.total) {
+      return;
+    }
+
+    const totalCount =
+      typeof result.hits.total === 'number'
+        ? result.hits.total
+        : result.hits.total.value;
+
+    const data = result.hits.hits.map((hit) => hit._source);
+
+    return {
+      data,
+      pagination: {
+        totalCount,
+        currentPage: page,
+        perPage: limit,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    };
+  }
+
+  async updateContractedServiceStatus(
+    contractedServiceId: string,
+    status: TServiceStatus,
+  ) {
+    return await this.esService.update({
+      index: INDEXES.CONTRACTED_SERVICES,
+      id: contractedServiceId,
+      doc: {
+        status,
       },
     });
   }

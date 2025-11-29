@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, Min, Max } from 'class-validator';
+import { IsInt, Min, Max, IsOptional, IsUUID } from 'class-validator';
 
 export class GetAllContractedQueryDto {
   @Type(() => Number)
@@ -12,8 +12,14 @@ export class GetAllContractedQueryDto {
   @Min(1)
   @Max(100)
   limit: number = 10;
+
+  @IsOptional()
+  @IsUUID()
+  contractorId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  providerId?: string;
 }
 
-export type TGetAllContracted = InstanceType<
-  typeof GetAllContractedQueryDto
-> & { contractorId: string };
+export type TGetAllContracted = InstanceType<typeof GetAllContractedQueryDto>;

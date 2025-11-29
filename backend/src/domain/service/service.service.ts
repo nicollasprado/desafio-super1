@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { TCreateServiceDTO } from './dtos/create-service.dto';
 import prisma from 'src/infra/lib/prisma';
 import AlreadyExistsException from 'src/shared/exceptions/already-exists.exception';
@@ -44,6 +44,50 @@ const GetProviderServiceSelect = {
       weekday: true,
       start: true,
       end: true,
+    },
+  },
+};
+
+const GetContractedServiceSelect = {
+  id: true,
+  start: true,
+  end: true,
+  status: true,
+  totalPrice: true,
+  contractor: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      avatarUrl: true,
+    },
+  },
+  variant: {
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      durationMinutes: true,
+      providerService: {
+        select: {
+          id: true,
+          description: true,
+          service: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          provider: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      },
     },
   },
 };
@@ -184,65 +228,18 @@ export default class ServiceService {
     return foundProvidedServices;
   }
 
-  async getAllContracted({ limit, page, contractorId }: TGetAllContracted) {
-    const where = {
-      deletedAt: null,
+  async getAllContracted({
+    limit,
+    page,
+    contractorId,
+    providerId,
+  }: TGetAllContracted) {
+    return await this.serviceSearchService.searchContractedServices({
       contractorId,
-    };
-
-    const totalCount = await prisma.contractedService.count({ where });
-
-    const offset = (page - 1) * limit;
-    const contractedServices = await prisma.contractedService.findMany({
-      where,
-      take: limit,
-      skip: offset,
-      select: {
-        id: true,
-        start: true,
-        end: true,
-        status: true,
-        totalPrice: true,
-        variant: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            durationMinutes: true,
-            providerService: {
-              select: {
-                id: true,
-                description: true,
-                service: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-                provider: {
-                  select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    avatarUrl: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      providerId,
+      page,
+      limit,
     });
-
-    return {
-      data: contractedServices,
-      pagination: {
-        totalCount,
-        currentPage: page,
-        perPage: limit,
-        totalPages: Math.ceil(totalCount / limit),
-      },
-    };
   }
 
   async contract({ contractorId, start, variantId }: TContractServiceDTO) {
@@ -253,15 +250,25 @@ export default class ServiceService {
     const end = new Date(start);
     end.setMinutes(end.getMinutes() + variant.durationMinutes);
 
-    const newContractedService = await prisma.contractedService.create({
-      data: {
-        contractorId,
-        variantId,
-        start,
-        end,
-        status: 'WAITING_CONFIRMATION',
-        totalPrice: variant.price,
-      },
+    const newContractedService = await prisma.$transaction(async (prisma) => {
+      const newContractedService = await prisma.contractedService.create({
+        data: {
+          contractorId,
+          variantId,
+          start,
+          end,
+          status: 'WAITING_CONFIRMATION',
+          totalPrice: variant.price,
+        },
+        select: GetContractedServiceSelect,
+      });
+
+      await this.serviceSearchService.indexContractedService(
+        newContractedService.id,
+        newContractedService,
+      );
+
+      return newContractedService;
     });
 
     return newContractedService;
@@ -315,7 +322,7 @@ export default class ServiceService {
         where: {
           deletedAt: null,
           variantId: { in: variantsIds },
-          status: 'SCHEDULED',
+          status: { in: ['SCHEDULED', 'ONGOING'] },
           start: { gte: new Date() },
         },
       });
@@ -448,5 +455,45 @@ export default class ServiceService {
     });
 
     return availability;
+  }
+
+  async acceptContract(contractedServiceId: string, authorId: string) {
+    const contractedService = await prisma.contractedService.findUnique({
+      where: { id: contractedServiceId, deletedAt: null },
+      include: {
+        variant: {
+          include: {
+            providerService: true,
+          },
+        },
+      },
+    });
+
+    if (!contractedService) {
+      throw new NotFoundException('contracted service');
+    }
+
+    if (contractedService.variant.providerService.providerId !== authorId) {
+      throw new ForbiddenException();
+    }
+
+    const updatedContractedService = await prisma.$transaction(
+      async (prisma) => {
+        const updatedContractedService = await prisma.contractedService.update({
+          where: { id: contractedService.id, deletedAt: null },
+          data: {
+            status: 'SCHEDULED',
+          },
+          select: GetContractedServiceSelect,
+        });
+
+        await this.serviceSearchService.updateContractedServiceStatus(
+          updatedContractedService.id,
+          updatedContractedService.status,
+        );
+      },
+    );
+
+    return updatedContractedService;
   }
 }

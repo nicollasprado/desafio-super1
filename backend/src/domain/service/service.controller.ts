@@ -4,8 +4,10 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { CreateServiceDto } from './dtos/create-service.dto';
@@ -15,10 +17,17 @@ import { GetAllProvidedQueryDto } from './dtos/get-all-provided-services.dto';
 import { ContractServiceBodyDto } from './dtos/contract-service.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { GetAllContractedQueryDto } from './dtos/get-all-contracted-services.dto';
+import extractTokenFromHeader from 'src/shared/util/extractTokenFromHeader';
+import AuthService from '../auth/auth.service';
+import type { Request } from 'express';
+import InvalidTokenException from 'src/shared/exceptions/invalid-token.exception';
 
 @Controller('service')
 export default class ServiceController {
-  constructor(private readonly serviceService: ServiceService) {}
+  constructor(
+    private readonly serviceService: ServiceService,
+    private readonly authService: AuthService,
+  ) {}
 
   @UseGuards(AuthGuard)
   @Post()
@@ -49,15 +58,14 @@ export default class ServiceController {
     });
   }
 
-  @Get('contracted/by-contractorId/:contractorId')
-  async getAllContracted(
-    @Param('contractorId') contractorId: string,
-    @Query() query: GetAllContractedQueryDto,
-  ) {
-    const { page = 1, limit = 10 } = query;
+  @UseGuards(AuthGuard)
+  @Get('contracted')
+  async getAllContracted(@Query() query: GetAllContractedQueryDto) {
+    const { page = 1, limit = 10, contractorId, providerId } = query;
     return this.serviceService.getAllContracted({
       page,
       limit,
+      providerId,
       contractorId,
     });
   }
@@ -69,6 +77,26 @@ export default class ServiceController {
     @Body() data: ContractServiceBodyDto,
   ) {
     return await this.serviceService.contract({ ...data, variantId });
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('contracted/:contractedServiceId/accept')
+  async acceptContract(
+    @Param('contractedServiceId') contractedServiceId: string,
+    @Req() req: Request,
+  ) {
+    const token = extractTokenFromHeader(req);
+
+    if (!token) {
+      throw new InvalidTokenException();
+    }
+
+    const author = await this.authService.describeMe(token);
+
+    return await this.serviceService.acceptContract(
+      contractedServiceId,
+      author.id,
+    );
   }
 
   @UseGuards(AuthGuard)
