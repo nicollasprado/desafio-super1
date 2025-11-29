@@ -19,33 +19,27 @@
 </script>
 
 <div class="flex items-center justify-center gap-10 w-1/2 m-auto">
-  <Label class="w-full">
-    Buscar
-    <Input
-      type="search"
-      clearable
-      placeholder="Buscar por descrição"
-      class="ps-10 placeholder-muted"
-      bind:value={search}
-    >
-      {#snippet left()}
-        <SearchSolid class="shrink-0 h-6 w-6 fill-transparent stroke-black" />
-      {/snippet}
-    </Input>
-  </Label>
+  <Input
+    type="search"
+    clearable
+    placeholder="Buscar por descrição"
+    class="ps-10 placeholder-muted"
+    bind:value={search}
+  >
+    {#snippet left()}
+      <SearchSolid class="shrink-0 h-6 w-6 fill-transparent stroke-black" />
+    {/snippet}
+  </Input>
 
-  <Label class="w-[15dvw]">
-    Serviço
-    <Select
-      id="countries"
-      bind:value={selectedService}
-      placeholder="Tipo do serviço"
-      class="placeholder-muted"
-      clearable
-    >
-      {#each services as { id, name }}
-        <option value={id}>{name}</option>
-      {/each}
-    </Select>
-  </Label>
+  <Select
+    id="countries"
+    bind:value={selectedService}
+    placeholder="Tipo do serviço"
+    class="placeholder-muted w-1/4"
+    clearable
+  >
+    {#each services as { id, name }}
+      <option value={id}>{name}</option>
+    {/each}
+  </Select>
 </div>
