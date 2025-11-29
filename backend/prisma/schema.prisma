@@ -69,7 +69,7 @@ model Variant {
 
 model Schedule {
   id                String          @id @default(uuid())
-  weekday           Int            // 0 (Monday) to 6 (Sunday)
+  weekday           Int // 0 (Monday) to 6 (Sunday)
   start             DateTime
   end               DateTime
   providerService   ProviderService @relation(fields: [providerServiceId], references: [id], onDelete: Cascade)
@@ -85,7 +85,7 @@ model Schedule {
 model ContractedService {
   id           String         @id @default(uuid())
   status       SERVICE_STATUS
-  total_price  Int
+  totalPrice   Int            @map("total_price")
   contractor   User           @relation(fields: [contractorId], references: [id], onDelete: Cascade)
   contractorId String         @map("contractor_id")
   start        DateTime

@@ -235,7 +235,7 @@ export default class ServiceService {
         start: true,
         end: true,
         status: true,
-        total_price: true,
+        totalPrice: true,
         variant: {
           select: {
             id: true,
@@ -293,7 +293,7 @@ export default class ServiceService {
         start,
         end,
         status: 'WAITING_CONFIRMATION',
-        total_price: variant.price,
+        totalPrice: variant.price,
       },
     });
 
