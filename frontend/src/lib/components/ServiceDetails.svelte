@@ -5,6 +5,10 @@
   import type { TAvailability } from '$lib/types/TAvailability'
   import { Button, Carousel, CarouselIndicators, Controls, Modal } from 'flowbite-svelte'
   import { onMount } from 'svelte'
+  import VariantCard from './VariantCard.svelte'
+  import type { IUser } from '$lib/interfaces/IUser'
+  import { toast } from 'svelte-sonner'
+  import { Toaster } from './ui/sonner'
 
   interface Props {
     providerService: IProviderService
@@ -17,6 +21,7 @@
   let selectedTime: string = $state('')
   let availability: TAvailability = $state({})
   let selectedAvailabilityItem = $state<TAvailability[string] | null>(null)
+  let selectedVariantId: string = $state('')
 
   const images = providerService.imagesUrls.map((url) => ({
     alt: 'Service Image',
@@ -43,27 +48,89 @@
   const handleChangeSelectedTime = (time: string) => {
     selectedTime = time
   }
+
+  const handleContract = async () => {
+    const errors: string[] = []
+
+    if (!selectedDate) errors.push('Selecione uma data')
+    if (!selectedTime) errors.push('Selecione um horário')
+    if (!selectedVariantId) errors.push('Selecione um tipo de serviço')
+
+    if (errors.length > 0) {
+      toast.error(errors.join(', '))
+      return
+    }
+
+    const resMe = await api.axios.get<IUser>('/auth/me')
+
+    if (resMe.status !== 200) return
+    const contractorId = resMe.data.id
+
+    const [year, month, day] = selectedDate.split('-').map(Number)
+    const [hour, minute] = selectedTime.split(':').map(Number)
+
+    const contractDate = new Date(year, month - 1, day, hour, minute)
+    const refinedContractDate = contractDate.toISOString()
+
+    const payload = {
+      contractorId,
+      start: refinedContractDate,
+    }
+
+    const res = await api.axios.post(
+      `/service/provided/variant/${selectedVariantId}/contract`,
+      payload,
+    )
+
+    if (res.status === 201) {
+      modalVisible = false
+      toast.success('Serviço contratado com sucesso!')
+    } else {
+      toast.error('Erro ao processar sua solicitação. Tente novamente.')
+    }
+  }
 </script>
 
 <Button class="cursor-pointer" onclick={() => (modalVisible = true)}>Ver detalhes</Button>
 
-<Modal bind:open={modalVisible} size="lg">
+<Modal bind:open={modalVisible} size="xl" title="Detalhes do Serviço" class="z-1">
+  <Toaster position="top-center" />
+
   <div class="flex gap-2 items-center">
-    <h3 class="text-xl text-text font-bold">Detalhes do Serviço</h3>
-    <p class="text-xl text-text font-bold">-</p>
-    <ServiceBadge service={providerService.service} />
+    {#if providerService.provider.avatarUrl !== null}
+      <img
+        src={`${providerService.provider.avatarUrl}?height=50&width=50&fit=crop`}
+        alt="Provider Avatar"
+        class="w-12 h-12 rounded-full object-cover"
+      />
+    {:else}
+      <div class="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
+        <span class="text-xl text-white font-bold">
+          {providerService.provider.firstName.charAt(0).toUpperCase()}
+        </span>
+      </div>
+    {/if}
+
+    <div class="flex gap-4 items-center">
+      <p class="text-sm text-text font-bold">
+        {providerService.provider.firstName}
+        {providerService.provider.lastName}
+      </p>
+      <p class="text-sm text-muted font-bold">-</p>
+      <ServiceBadge service={providerService.service} />
+    </div>
   </div>
   <p>{providerService.description}</p>
 
   <div class="flex flex-col gap-4">
     <div class="border border-[#cacaca] rounded-lg">
-      <Carousel {images}>
+      <Carousel {images} style="height: 30dvh;">
         <Controls />
         <CarouselIndicators />
       </Carousel>
     </div>
 
-    <ol class="flex overflow-scroll gap-8 h-35 p-2">
+    <ol class="flex overflow-scroll gap-8 h-32 p-2">
       {#each Object.values(availability) as availabilityItem}
         <li>
           <Button
@@ -98,11 +165,15 @@
       {/if}
     </ol>
 
-    <p><strong>Variantes:</strong></p>
-    <ul class="list-disc list-inside">
+    <ul class="flex gap-4 border-t-[#cacaca7c] border-t pt-4">
       {#each providerService.variants as variant}
         <li>
-          {variant.name} - R$ {variant.price / 100}
+          <button
+            class={`cursor-pointer rounded ${selectedVariantId === variant.id ? 'bg-primary-600 text-white' : ''}`}
+            onclick={() => (selectedVariantId = variant.id)}
+          >
+            <VariantCard {variant} />
+          </button>
         </li>
       {/each}
     </ul>
@@ -110,6 +181,6 @@
 
   <div class="flex justify-between">
     <Button color="gray" onclick={() => (modalVisible = false)}>Fechar</Button>
-    <Button onclick={() => (modalVisible = false)}>Contratar</Button>
+    <Button onclick={() => handleContract()}>Contratar</Button>
   </div>
 </Modal>

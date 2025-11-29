@@ -1,3 +1,5 @@
+import type IVariant from './IVariant'
+
 export default interface IProviderService {
   id: string
   description: string
@@ -6,17 +8,13 @@ export default interface IProviderService {
     id: string
     firstName: string
     lastName: string
+    avatarUrl: string
   }
   service: {
     id: string
     name: string
   }
-  variants: {
-    id: string
-    name: string
-    price: number
-    durationMinutes: number
-  }[]
+  variants: IVariant[]
   schedules: {
     id: string
     weekdays: number[]

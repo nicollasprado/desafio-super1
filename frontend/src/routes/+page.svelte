@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import Filter from './Filter.svelte'
-  import Header from './Header.svelte'
   import type IProviderService from '$lib/interfaces/IProviderService'
   import api from '$lib/AxiosService'
-  import ServiceCard from './ServiceCard.svelte'
+  import Header from '$lib/components/Header.svelte'
+  import Filter from '$lib/components/Filter.svelte'
+  import ServiceCard from '$lib/components/ServiceCard.svelte'
 
   let providerServices: IProviderService[] = $state([])
 
