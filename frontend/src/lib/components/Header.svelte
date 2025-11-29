@@ -25,6 +25,7 @@
 
 <header class="flex w-full items-center justify-around p-4 border border-gray-300">
   <a href="/"><h1 class="text-2xl font-bold text-primary-600">Marketplace</h1></a>
+
   {#if user}
     <button type="button" class="cursor-pointer">
       <div class="flex gap-3 items-center">

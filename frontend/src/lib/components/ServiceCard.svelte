@@ -22,8 +22,8 @@
   })
 </script>
 
-<div
-  class="flex flex-col gap-4 bg-white w-[20dvw] p-4 border-gray-300 border rounded-md shadow-md mb-4"
+<li
+  class="flex flex-col gap-1 bg-white w-[95vw] xl:w-80 p-4 border-gray-300 border rounded-md shadow-md h-full justify-between"
 >
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-2">
@@ -59,4 +59,4 @@
   </div>
 
   <ServiceDetails {providerService} />
-</div>
+</li>

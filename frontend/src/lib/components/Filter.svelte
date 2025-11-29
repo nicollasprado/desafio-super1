@@ -38,12 +38,12 @@
   })
 </script>
 
-<div class="flex items-center justify-center gap-10 w-1/2 m-auto">
+<div class="flex flex-col xl:flex-row items-center justify-center gap-5 xl:gap-10">
   <Input
     type="search"
     clearable
     placeholder="Buscar por descrição"
-    class="ps-10 placeholder-muted"
+    class="ps-10 placeholder-muted xl:min-w-120"
     bind:value={search}
   >
     {#snippet left()}
@@ -55,7 +55,7 @@
     id="countries"
     bind:value={selectedService}
     placeholder="Tipo do serviço"
-    class="placeholder-muted w-1/4"
+    class="placeholder-muted xl:min-w-50"
     clearable
   >
     {#each services as { id, name }}
