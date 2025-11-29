@@ -39,12 +39,13 @@ export default class ServiceController {
 
   @Get('provided')
   async getAllProvided(@Query() query: GetAllProvidedQueryDto) {
-    const { page = 1, limit = 10, serviceId, search } = query;
+    const { page = 1, limit = 10, serviceId, search, providerId } = query;
     return this.serviceService.getAllProvided({
       page,
       limit,
       serviceId,
       search,
+      providerId,
     });
   }
 

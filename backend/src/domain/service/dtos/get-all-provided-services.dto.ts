@@ -20,6 +20,10 @@ export class GetAllProvidedQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @IsUUID()
+  providerId?: string;
 }
 
 export type TGetAllProvided = InstanceType<typeof GetAllProvidedQueryDto>;

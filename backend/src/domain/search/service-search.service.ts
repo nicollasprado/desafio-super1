@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { IIndexProviderServiceDTO } from './dtos/provider-service-search-res.dto';
+import { TGetAllProvided } from '../service/dtos/get-all-provided-services.dto';
 
 @Injectable()
 export default class ServiceSearchService {
@@ -27,14 +28,10 @@ export default class ServiceSearchService {
   async searchProvidedServices({
     search,
     serviceId,
+    providerId,
     page,
     limit,
-  }: {
-    serviceId?: string;
-    search?: string;
-    page: number;
-    limit: number;
-  }) {
+  }: TGetAllProvided) {
     const from = (page - 1) * limit;
 
     const must: any[] = [];
@@ -53,6 +50,14 @@ export default class ServiceSearchService {
       must.push({
         term: {
           'service.id.keyword': serviceId,
+        },
+      });
+    }
+
+    if (providerId) {
+      must.push({
+        match: {
+          'provider.id': providerId,
         },
       });
     }

@@ -165,11 +165,18 @@ export default class ServiceService {
     return variant;
   }
 
-  async getAllProvided({ limit, page, serviceId, search }: TGetAllProvided) {
+  async getAllProvided({
+    limit,
+    page,
+    serviceId,
+    search,
+    providerId,
+  }: TGetAllProvided) {
     const foundProvidedServices =
       await this.serviceSearchService.searchProvidedServices({
         search: search,
         serviceId,
+        providerId,
         page,
         limit,
       });
