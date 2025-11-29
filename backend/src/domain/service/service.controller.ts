@@ -15,11 +15,11 @@ import { GetAllProvidedQueryDto } from './dtos/get-all-provided-services.dto';
 import { ContractServiceBodyDto } from './dtos/contract-service.dto';
 import { AuthGuard } from '../auth/auth.guard';
 
-@UseGuards(AuthGuard)
 @Controller('service')
 export default class ServiceController {
   constructor(private readonly serviceService: ServiceService) {}
 
+  @UseGuards(AuthGuard)
   @Post()
   async create(@Body() data: CreateServiceDto) {
     return await this.serviceService.create(data);
@@ -30,6 +30,7 @@ export default class ServiceController {
     return await this.serviceService.getAll();
   }
 
+  @UseGuards(AuthGuard)
   @Post('provide')
   async provide(@Body() data: ProvideServiceDto) {
     return await this.serviceService.provide(data);
@@ -46,6 +47,7 @@ export default class ServiceController {
     });
   }
 
+  @UseGuards(AuthGuard)
   @Post('provided/variant/:variantId/contract')
   async contract(
     @Param('variantId') variantId: string,
@@ -54,6 +56,7 @@ export default class ServiceController {
     return await this.serviceService.contract({ ...data, variantId });
   }
 
+  @UseGuards(AuthGuard)
   @Delete('provided/:id')
   async deleteProvidedService(@Param('id') id: string) {
     await this.serviceService.deleteProvidedService(id);
