@@ -19,7 +19,7 @@
   import ServiceStatusBadge from '$lib/components/ServiceStatusBadge.svelte'
   import formatPrice from '../../../utils/formatPrice'
 
-  let contractedServices: IContractedService[] = $state([])
+  let providedServices: IContractedService[] = $state([])
   let pagination: IPagination = $state({
     currentPage: 1,
     perPage: 10,
@@ -28,24 +28,24 @@
   })
   let user: IUser | null = $state(null)
 
-  interface IContractedServiceResponse {
+  interface IProvidedServiceResponse {
     data: IContractedService[]
     pagination: IPagination
   }
 
-  const fetchContractedServices = async () => {
+  const fetchProvidedServices = async () => {
     if (!user) return
 
-    const res = await api.axios.get<IContractedServiceResponse>(`/service/contracted`, {
+    const res = await api.axios.get<IProvidedServiceResponse>(`/service/contracted`, {
       params: {
         page: pagination.currentPage,
         limit: pagination.perPage,
-        contractorId: user.id,
+        providerId: user.id,
       },
     })
 
     if (res.status === 200) {
-      contractedServices = res.data.data
+      providedServices = res.data.data
       pagination = res.data.pagination
     }
   }
@@ -60,7 +60,7 @@
 
     user = authUser
 
-    fetchContractedServices()
+    fetchProvidedServices()
   })
 
   const handlePrevious = async () => {
@@ -68,26 +68,26 @@
 
     pagination.currentPage -= 1
 
-    fetchContractedServices()
+    fetchProvidedServices()
   }
   const handleNext = async () => {
     if (pagination.currentPage === pagination.totalPages) return
 
     pagination.currentPage += 1
 
-    fetchContractedServices()
+    fetchProvidedServices()
   }
 </script>
 
 <Header />
 
 <main class="h-full">
-  <h2 class="text-xl font-bold p-4">Serviços Contratados</h2>
+  <h2 class="text-xl font-bold p-4">Serviços Prestados</h2>
 
   <div class="flex flex-col gap-6">
     <Table striped class="border border-[#cacaca7c]">
       <TableHead>
-        <TableHeadCell>Prestador</TableHeadCell>
+        <TableHeadCell>Contratante</TableHeadCell>
         <TableHeadCell>Serviço</TableHeadCell>
         <TableHeadCell>Variante</TableHeadCell>
         <TableHeadCell>Preço</TableHeadCell>
@@ -96,20 +96,20 @@
         <TableHeadCell>Fim</TableHeadCell>
       </TableHead>
       <TableBody>
-        {#each contractedServices as contractedService}
+        {#each providedServices as providedService}
           <TableBodyRow>
             <TableBodyCell>
               <div class="flex items-center gap-2">
-                {#if contractedService.variant.providerService.provider.avatarUrl !== null}
+                {#if providedService.contractor.avatarUrl !== null}
                   <img
-                    src={`${contractedService.variant.providerService.provider.avatarUrl}?height=50&width=50&fit=crop`}
+                    src={`${providedService.contractor.avatarUrl}?height=50&width=50&fit=crop`}
                     alt="Provider Avatar"
                     class="w-8 h-8 rounded-full object-cover"
                   />
                 {:else}
                   <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
                     <span class="text-xl text-white font-bold">
-                      {contractedService.variant.providerService.provider.firstName
+                      {providedService.variant.providerService.provider.firstName
                         .charAt(0)
                         .toUpperCase()}
                     </span>
@@ -117,19 +117,17 @@
                 {/if}
 
                 <p>
-                  {contractedService.variant.providerService.provider.firstName}
-                  {contractedService.variant.providerService.provider.lastName}
+                  {providedService.variant.providerService.provider.firstName}
+                  {providedService.variant.providerService.provider.lastName}
                 </p>
               </div>
             </TableBodyCell>
-            <TableBodyCell>{contractedService.variant.providerService.service.name}</TableBodyCell>
-            <TableBodyCell>{contractedService.variant.name}</TableBodyCell>
-            <TableBodyCell>R$ {formatPrice(contractedService.totalPrice)}</TableBodyCell>
-            <TableBodyCell><ServiceStatusBadge status={contractedService.status} /></TableBodyCell>
-            <TableBodyCell
-              >{new Date(contractedService.start).toLocaleString('pt-br')}</TableBodyCell
-            >
-            <TableBodyCell>{new Date(contractedService.end).toLocaleString('pt-br')}</TableBodyCell>
+            <TableBodyCell>{providedService.variant.providerService.service.name}</TableBodyCell>
+            <TableBodyCell>{providedService.variant.name}</TableBodyCell>
+            <TableBodyCell>R$ {formatPrice(providedService.totalPrice)}</TableBodyCell>
+            <TableBodyCell><ServiceStatusBadge status={providedService.status} /></TableBodyCell>
+            <TableBodyCell>{new Date(providedService.start).toLocaleString('pt-br')}</TableBodyCell>
+            <TableBodyCell>{new Date(providedService.end).toLocaleString('pt-br')}</TableBodyCell>
           </TableBodyRow>
         {/each}
       </TableBody>
@@ -139,7 +137,7 @@
       <div class="flex flex-col items-center justify-center gap-2">
         <div class="text-sm text-gray-700 dark:text-gray-400">
           Mostrando de <span class="font-semibold text-gray-900 dark:text-white"
-            >{contractedServices.length}</span
+            >{providedServices.length}</span
           >
           até
           <span class="font-semibold text-gray-900 dark:text-white">{pagination.perPage}</span>

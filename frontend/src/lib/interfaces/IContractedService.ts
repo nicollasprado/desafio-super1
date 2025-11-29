@@ -6,6 +6,12 @@ export default interface IContractedService {
   end: Date
   status: TServiceStatus
   totalPrice: number
+  contractor: {
+    id: string
+    firstName: string
+    lastName: string
+    avatarUrl?: string
+  }
   variant: {
     id: string
     name: string
