@@ -10,10 +10,14 @@ import { TGetAllProvided } from './dtos/get-all-provided-services.dto';
 import { TContractServiceDTO } from './dtos/contract-service.dto';
 import { TAvailabilityDTO } from './dtos/availability.dto';
 import { TGetAllContracted } from './dtos/get-all-contracted-services.dto';
+import ServiceSearchService from '../search/service-search.service';
 
 @Injectable()
 export default class ServiceService {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly serviceSearchService: ServiceSearchService,
+  ) {}
 
   async create({ name }: TCreateServiceDTO): Promise<IServiceDTO> {
     const serviceExists = await prisma.service.findUnique({
@@ -62,49 +66,62 @@ export default class ServiceService {
       throw new AlreadyExistsException('provider service');
     }
 
-    const newProviderService = await prisma.providerService.create({
-      data: {
-        description,
-        providerId,
-        serviceId,
-        schedules: {
-          create: schedules,
-        },
-        variants: {
-          create: variants,
-        },
-      },
-      include: {
-        provider: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
+    const newProviderService = await prisma.$transaction(async (prisma) => {
+      const newProviderService = await prisma.providerService.create({
+        data: {
+          description,
+          providerId,
+          serviceId,
+          schedules: {
+            create: schedules,
+          },
+          variants: {
+            create: variants,
           },
         },
-        schedules: {
-          select: {
-            id: true,
-            weekday: true,
-            start: true,
-            end: true,
+        select: {
+          id: true,
+          description: true,
+          imagesUrls: true,
+          service: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          provider: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+            },
+          },
+          variants: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              durationMinutes: true,
+            },
+          },
+          schedules: {
+            select: {
+              id: true,
+              weekday: true,
+              start: true,
+              end: true,
+            },
           },
         },
-        variants: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            durationMinutes: true,
-          },
-        },
-      },
-      omit: {
-        deletedAt: true,
-        updatedAt: true,
-        providerId: true,
-        serviceId: true,
-      },
+      });
+
+      await this.serviceSearchService.indexProvidedService(
+        newProviderService.id,
+        newProviderService,
+      );
+
+      return newProviderService;
     });
 
     return newProviderService;
@@ -147,74 +164,15 @@ export default class ServiceService {
   }
 
   async getAllProvided({ limit, page, serviceId, search }: TGetAllProvided) {
-    const baseWhere = {
-      deletedAt: null,
-    };
+    const foundProvidedServices =
+      await this.serviceSearchService.searchProvidedServices({
+        search: search,
+        serviceId,
+        page,
+        limit,
+      });
 
-    const where = serviceId
-      ? { ...baseWhere, service: { id: serviceId } }
-      : baseWhere;
-
-    const totalCount = await prisma.providerService.count({ where });
-
-    const offset = (page - 1) * limit;
-    const providerServices = await prisma.providerService.findMany({
-      where,
-      take: limit,
-      skip: offset,
-      include: {
-        variants: {
-          where: {
-            deletedAt: null,
-          },
-          omit: {
-            createdAt: true,
-            deletedAt: true,
-            updatedAt: true,
-            providerServiceId: true,
-          },
-        },
-        schedules: {
-          where: {
-            deletedAt: null,
-          },
-          omit: {
-            createdAt: true,
-            deletedAt: true,
-            updatedAt: true,
-            providerServiceId: true,
-          },
-        },
-        service: true,
-        provider: {
-          omit: {
-            phone: true,
-            createdAt: true,
-            deletedAt: true,
-            updatedAt: true,
-            email: true,
-            password: true,
-          },
-        },
-      },
-      omit: {
-        serviceId: true,
-        updatedAt: true,
-        deletedAt: true,
-        createdAt: true,
-        providerId: true,
-      },
-    });
-
-    return {
-      data: providerServices,
-      pagination: {
-        totalCount,
-        currentPage: page,
-        perPage: limit,
-        totalPages: Math.ceil(totalCount / limit),
-      },
-    };
+    return foundProvidedServices;
   }
 
   async getAllContracted({ limit, page, contractorId }: TGetAllContracted) {
