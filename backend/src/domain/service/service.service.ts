@@ -190,6 +190,7 @@ export default class ServiceService {
             phone: true,
             createdAt: true,
             deletedAt: true,
+            updatedAt: true,
             email: true,
             password: true,
           },
@@ -297,25 +298,30 @@ export default class ServiceService {
     providerService.schedules.forEach((schedule) => {
       const weekday = Number(schedule.weekday);
 
+      const startTime = new Date(schedule.start);
+      const endTime = new Date(schedule.end);
+
       weekdayAvailability[weekday] = {
-        startTime: new Date(schedule.start),
-        endTime: new Date(schedule.end),
+        startTime,
+        endTime,
       };
     });
 
     const availability: TAvailabilityDTO = {};
 
-    const getDateKey = (date: Date) => date.toISOString().slice(0, 10); // YYYY-MM-DD
-    const getTimeKey = (date: Date) =>
-      date
-        .toLocaleTimeString('pt-BR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        })
-        .slice(0, 5); // HH:MM
+    const getDateKey = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
 
-    // For each 30min slot in contracted services, mark as unavailable
+    const getTimeKey = (date: Date) => {
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    };
+
     const addAllInUseStarts = (dateKey: string, start: Date, end: Date) => {
       const availabilityItem = availability[dateKey];
 
@@ -348,81 +354,61 @@ export default class ServiceService {
       );
 
       for (let i = 0; i < thirtyMinutesQtd; i++) {
-        const contractedStart = new Date(
-          startTime.getTime() + i * thirtyMinutesInMs,
-        );
+        const slotTime = new Date(startTime.getTime() + i * thirtyMinutesInMs);
+        const timeKey = getTimeKey(slotTime);
 
-        const timeKey = getTimeKey(contractedStart);
-        const timeItem = availabilityItem.contractedStarts[timeKey];
-
-        if (!timeItem) {
+        if (availabilityItem.contractedStarts[timeKey] === undefined) {
           availabilityItem.contractedStarts[timeKey] = true;
         }
       }
     };
 
     nextThirtyDatesContractedServices.forEach((contractedService) => {
-      const start: Date = new Date(contractedService.start);
-      const end: Date = new Date(contractedService.end);
+      const start = new Date(contractedService.start);
+      const end = new Date(contractedService.end);
       const dateKey = getDateKey(start);
-      const availabilityItem = availability[dateKey];
 
-      if (availabilityItem) {
-        addAllInUseStarts(dateKey, start, end);
-        return;
+      if (!availability[dateKey]) {
+        availability[dateKey] = {
+          day: start.getDate(),
+          weekDay: start
+            .toLocaleDateString('pt-BR', { weekday: 'short' })
+            .split('.')[0],
+          month: start
+            .toLocaleDateString('pt-BR', { month: 'short' })
+            .split('.')[0],
+          date: dateKey,
+          contractedStarts: {},
+        };
       }
 
-      availability[dateKey] = {
-        day: start.getDate(),
-        weekDay: start
-          .toLocaleDateString('pt-BR', { weekday: 'short' })
-          .split('.')[0],
-        month: start
-          .toLocaleDateString('pt-BR', { month: 'short' })
-          .split('.')[0],
-        date: dateKey,
-        contractedStarts: {},
-      };
       addAllInUseStarts(dateKey, start, end);
     });
 
-    // Fill remaining days in next 30 days
     Array.from({ length: 30 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() + i + 1);
+      date.setHours(0, 0, 0, 0);
+
       const dateKey = getDateKey(date);
-
-      const availabilityItem = availability[dateKey];
-
       const weekday = date.getDay();
       const daySchedule = weekdayAvailability[weekday];
 
       if (!daySchedule) return;
 
-      if (availabilityItem) {
-        fillMissingStarts(date, daySchedule.startTime, daySchedule.endTime);
-        return;
+      if (!availability[dateKey]) {
+        availability[dateKey] = {
+          day: date.getDate(),
+          weekDay: date
+            .toLocaleDateString('pt-BR', { weekday: 'short' })
+            .split('.')[0],
+          month: date
+            .toLocaleDateString('pt-BR', { month: 'short' })
+            .split('.')[0],
+          date: dateKey,
+          contractedStarts: {},
+        };
       }
-
-      const day = date.getDate();
-
-      let weekDay = date
-        .toLocaleDateString('pt-BR', { weekday: 'short' })
-        .split('.')[0];
-      weekDay = weekDay.charAt(0).toUpperCase() + weekDay.slice(1);
-
-      let month = date
-        .toLocaleDateString('pt-BR', { month: 'short' })
-        .split('.')[0];
-      month = month.charAt(0).toUpperCase() + month.slice(1);
-
-      availability[dateKey] = {
-        day,
-        weekDay,
-        month,
-        date: dateKey,
-        contractedStarts: {},
-      };
 
       fillMissingStarts(date, daySchedule.startTime, daySchedule.endTime);
     });
