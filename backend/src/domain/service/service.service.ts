@@ -9,6 +9,7 @@ import NotFoundException from 'src/shared/exceptions/not-found-exception';
 import { TGetAllProvided } from './dtos/get-all-provided-services.dto';
 import { TContractServiceDTO } from './dtos/contract-service.dto';
 import { TAvailabilityDTO } from './dtos/availability.dto';
+import { TGetAllContracted } from './dtos/get-all-contracted-services.dto';
 
 @Injectable()
 export default class ServiceService {
@@ -207,6 +208,67 @@ export default class ServiceService {
 
     return {
       data: providerServices,
+      pagination: {
+        totalCount,
+        currentPage: page,
+        perPage: limit,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    };
+  }
+
+  async getAllContracted({ limit, page, contractorId }: TGetAllContracted) {
+    const where = {
+      deletedAt: null,
+      contractorId,
+    };
+
+    const totalCount = await prisma.contractedService.count({ where });
+
+    const offset = (page - 1) * limit;
+    const contractedServices = await prisma.contractedService.findMany({
+      where,
+      take: limit,
+      skip: offset,
+      select: {
+        id: true,
+        start: true,
+        end: true,
+        status: true,
+        total_price: true,
+        variant: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            durationMinutes: true,
+            providerService: {
+              select: {
+                id: true,
+                description: true,
+                service: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+                provider: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    avatarUrl: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      data: contractedServices,
       pagination: {
         totalCount,
         currentPage: page,

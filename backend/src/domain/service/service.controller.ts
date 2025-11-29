@@ -14,6 +14,7 @@ import { ProvideServiceDto } from './dtos/provide-service.dto';
 import { GetAllProvidedQueryDto } from './dtos/get-all-provided-services.dto';
 import { ContractServiceBodyDto } from './dtos/contract-service.dto';
 import { AuthGuard } from '../auth/auth.guard';
+import { GetAllContractedQueryDto } from './dtos/get-all-contracted-services.dto';
 
 @Controller('service')
 export default class ServiceController {
@@ -44,6 +45,19 @@ export default class ServiceController {
       limit,
       serviceId,
       search,
+    });
+  }
+
+  @Get('contracted/by-contractorId/:contractorId')
+  async getAllContracted(
+    @Param('contractorId') contractorId: string,
+    @Query() query: GetAllContractedQueryDto,
+  ) {
+    const { page = 1, limit = 10 } = query;
+    return this.serviceService.getAllContracted({
+      page,
+      limit,
+      contractorId,
     });
   }
 
