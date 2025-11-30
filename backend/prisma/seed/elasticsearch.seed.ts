@@ -28,7 +28,103 @@ export async function seedElasticsearch(prisma: PrismaClient) {
 
     console.log('✅ Elasticsearch indices cleaned\n');
 
-    // Recriar os índices (serão criados automaticamente no primeiro insert)
+    // Recriar índices com mappings corretos
+    console.log('📋 Creating indices with mappings...');
+
+    await esClient.indices.create({
+      index: 'provider-services',
+      mappings: {
+        properties: {
+          id: { type: 'keyword' },
+          description: { type: 'text' },
+          imagesUrls: { type: 'keyword' },
+          service: {
+            properties: {
+              id: { type: 'keyword' },
+              name: { type: 'text' },
+            },
+          },
+          provider: {
+            properties: {
+              id: { type: 'keyword' },
+              firstName: { type: 'text' },
+              lastName: { type: 'text' },
+              avatarUrl: { type: 'keyword' },
+            },
+          },
+          variants: {
+            type: 'nested',
+            properties: {
+              id: { type: 'keyword' },
+              name: { type: 'text' },
+              price: { type: 'integer' },
+              durationMinutes: { type: 'integer' },
+            },
+          },
+          schedules: {
+            type: 'nested',
+            properties: {
+              id: { type: 'keyword' },
+              weekday: { type: 'integer' },
+              start: { type: 'date' },
+              end: { type: 'date' },
+            },
+          },
+        },
+      },
+    });
+
+    await esClient.indices.create({
+      index: 'contracted-services',
+      mappings: {
+        properties: {
+          id: { type: 'keyword' },
+          start: { type: 'date' },
+          end: { type: 'date' },
+          status: { type: 'keyword' },
+          totalPrice: { type: 'integer' },
+          contractor: {
+            properties: {
+              id: { type: 'keyword' },
+              firstName: { type: 'text' },
+              lastName: { type: 'text' },
+              avatarUrl: { type: 'keyword' },
+            },
+          },
+          variant: {
+            properties: {
+              id: { type: 'keyword' },
+              name: { type: 'text' },
+              price: { type: 'integer' },
+              durationMinutes: { type: 'integer' },
+              providerService: {
+                properties: {
+                  id: { type: 'keyword' },
+                  description: { type: 'text' },
+                  service: {
+                    properties: {
+                      id: { type: 'keyword' },
+                      name: { type: 'text' },
+                    },
+                  },
+                  provider: {
+                    properties: {
+                      id: { type: 'keyword' },
+                      firstName: { type: 'text' },
+                      lastName: { type: 'text' },
+                      avatarUrl: { type: 'keyword' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    console.log('✅ Indices created with mappings\n');
+
     // Buscar todos os provider services com suas relações
     const providerServices = await prisma.providerService.findMany({
       include: {
