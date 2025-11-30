@@ -6,8 +6,7 @@ import { UploadModule } from './domain/upload/upload.module';
 import { SearchModule } from './domain/search/search.module';
 import AuthModule from './domain/auth/auth.module';
 import * as Joi from 'joi';
-import * as redisStore from 'cache-manager-redis-store';
-import { CacheModule } from '@nestjs/cache-manager';
+import { RedisModule } from '@liaoliaots/nestjs-redis';
 
 @Module({
   imports: [
@@ -27,21 +26,19 @@ import { CacheModule } from '@nestjs/cache-manager';
         REDIS_URL: Joi.string().required(),
       }),
     }),
+    RedisModule.forRootAsync({
+      useFactory: (configService: ConfigService) => ({
+        config: {
+          url: configService.get<string>('REDIS_URL'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
     UserModule,
     AuthModule,
     ServiceModule,
     UploadModule,
     SearchModule,
-    CacheModule.registerAsync({
-      isGlobal: true,
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (ConfigService: ConfigService) => ({
-        store: redisStore,
-        url: ConfigService.get<string>('REDIS_URL'),
-        ttl: 300, // 5min
-      }),
-    }),
   ],
   controllers: [],
   providers: [],

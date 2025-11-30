@@ -1,4 +1,4 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { TCreateServiceDTO } from './dtos/create-service.dto';
 import prisma from 'src/infra/lib/prisma';
 import AlreadyExistsException from 'src/shared/exceptions/already-exists.exception';
@@ -11,9 +11,9 @@ import { TContractServiceDTO } from './dtos/contract-service.dto';
 import { TAvailabilityDTO } from './dtos/availability.dto';
 import { TGetAllContracted } from './dtos/get-all-contracted-services.dto';
 import ServiceSearchService from '../search/service-search.service';
-import type { Cache } from 'cache-manager';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { RedisService } from '@liaoliaots/nestjs-redis';
 import CACHE_KEYS from 'src/shared/consts/CACHE_KEYS';
+import Redis from 'ioredis';
 
 const GetProviderServiceSelect = {
   id: true,
@@ -97,11 +97,15 @@ const GetContractedServiceSelect = {
 
 @Injectable()
 export default class ServiceService {
+  private readonly redis: Redis;
+
   constructor(
     private readonly userService: UserService,
     private readonly serviceSearchService: ServiceSearchService,
-    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
-  ) {}
+    private readonly redisService: RedisService,
+  ) {
+    this.redis = this.redisService.getOrThrow();
+  }
 
   async create({ name }: TCreateServiceDTO): Promise<IServiceDTO> {
     const serviceExists = await prisma.service.findUnique({
@@ -282,11 +286,10 @@ export default class ServiceService {
 
     const cacheKey = `${CACHE_KEYS.PROVIDER_SERVICE_AVAILABILITY}:${newContractedService.variant.providerService.id}`;
 
-    const avaiabilityCached =
-      await this.cacheService.get<TAvailabilityDTO>(cacheKey);
+    const avaiabilityCached = await this.redis.get(cacheKey);
 
     if (avaiabilityCached) {
-      await this.cacheService.del(cacheKey);
+      await this.redis.del(cacheKey);
     }
 
     return newContractedService;
@@ -329,11 +332,10 @@ export default class ServiceService {
   async getAvailability(providerServiceId: string) {
     const cacheKey = `${CACHE_KEYS.PROVIDER_SERVICE_AVAILABILITY}:${providerServiceId}`;
 
-    const avaiabilityCached =
-      await this.cacheService.get<TAvailabilityDTO>(cacheKey);
+    const avaiabilityCached = await this.redis.get(cacheKey);
 
     if (avaiabilityCached) {
-      return avaiabilityCached;
+      return JSON.parse(avaiabilityCached) as TAvailabilityDTO;
     }
 
     const providerService = await prisma.providerService.findUnique({
@@ -487,7 +489,7 @@ export default class ServiceService {
       addAllInUseStarts(dateKey, start, end);
     });
 
-    await this.cacheService.set(cacheKey, availability, 0);
+    await this.redis.set(cacheKey, JSON.stringify(availability));
 
     return availability;
   }
