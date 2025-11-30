@@ -1,0 +1,85 @@
+Table users {
+    id varchar [pk]
+    first_name varchar
+    last_name varchar
+    email varchar [unique]
+    password varchar
+    phone varchar [null, unique]
+    avatar_url varchar [null]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [null]
+}
+
+Table service {
+    id varchar [pk]
+    name varchar [unique]
+}
+
+Table provider_service {
+    id varchar [pk]
+    description varchar
+    provider_id varchar [ref: > users.id]
+    service_id varchar [ref: > service.id]
+    images_urls varchar[]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [null]
+    
+    indexes {
+        (provider_id, service_id) [unique]
+    }
+}
+
+Table variant {
+    id varchar [pk]
+    name varchar
+    price integer
+    duration_minutes integer
+    provider_service_id varchar [ref: > provider_service.id]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [null]
+    
+    indexes {
+        (provider_service_id, name) [unique]
+    }
+}
+
+Table contracted_service {
+    id varchar [pk]
+    status SERVICE_STATUS
+    total_price integer
+    contractor_id varchar [ref: > users.id]
+    start timestamp
+    end timestamp
+    variant_id varchar [ref: > variant.id]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [null]
+}
+
+Table schedule {
+    id varchar [pk]
+    weekday integer
+    start timestamp
+    end timestamp
+    provider_service_id varchar [ref: > provider_service.id]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [null]
+    
+    indexes {
+        (provider_service_id, weekday) [unique]
+    }
+}
+
+enum SERVICE_STATUS {
+    PAYMENT_PENDING
+    WAITING_CONFIRMATION
+    SCHEDULED
+    ONGOING
+    FINISHED
+    CANCELED
+    REJECTED
+}
