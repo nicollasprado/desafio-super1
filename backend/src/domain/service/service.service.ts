@@ -151,6 +151,11 @@ export default class ServiceService {
     }
 
     const newProviderService = await prisma.$transaction(async (prisma) => {
+      const refinedVariants = variants.map((variant) => ({
+        ...variant,
+        price: variant.price * 100, // Convert to cents
+      }));
+
       const newProviderService = await prisma.providerService.create({
         data: {
           description,
@@ -160,7 +165,7 @@ export default class ServiceService {
             create: schedules,
           },
           variants: {
-            create: variants,
+            create: refinedVariants,
           },
         },
         select: GetProviderServiceSelect,

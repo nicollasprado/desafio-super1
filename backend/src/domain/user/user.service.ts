@@ -5,7 +5,7 @@ import hashPassword from 'src/shared/util/hashPassword';
 import { TCreateUserDto } from './dtos/create-user.dto';
 import { TUserDTO } from './dtos/user.dto';
 import NotFoundException from 'src/shared/exceptions/not-found-exception';
-import { User } from 'prisma/generated/client';
+import { User } from '@prisma/client';
 
 @Injectable()
 export default class UserService {
