@@ -121,7 +121,7 @@
       </div>
 
       <main>
-        <ol class="flex flex-col xl:flex-row gap-4 items-center">
+        <ol class="flex flex-col xl:flex-row gap-10 xl:gap-20 flex-wrap items-center">
           {#each providerServices as providerService (providerService.id)}
             <ServiceCard {providerService} />
           {/each}

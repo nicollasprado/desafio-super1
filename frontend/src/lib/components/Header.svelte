@@ -24,7 +24,7 @@
 </script>
 
 <header class="flex w-full items-center justify-around p-4 border border-gray-300">
-  <a href="/"><h1 class="text-2xl font-bold text-primary-600">Marketplace</h1></a>
+  <a href="/"><h1 class="text-xl xl:text-2xl font-bold text-primary-600">Marketplace</h1></a>
 
   {#if user}
     <button type="button" class="cursor-pointer">
@@ -57,7 +57,7 @@
       </button>
     </Dropdown>
   {:else}
-    <div class="flex gap-10 items-center">
+    <div class="flex gap-2 xl:gap-10 items-center">
       <Login />
       <Register />
     </div>

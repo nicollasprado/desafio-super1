@@ -1,9 +1,7 @@
 <script lang="ts">
   import type IProviderService from '$lib/interfaces/IProviderService'
-  import { Button } from 'flowbite-svelte'
   import { onMount } from 'svelte'
   import ServiceDetails from './ServiceDetails.svelte'
-  import api from '$lib/AxiosService'
   import ServiceBadge from './ServiceBadge.svelte'
 
   interface Props {
@@ -17,13 +15,13 @@
   onMount(() => {
     if (providerService.variants.length > 0) {
       const total = providerService.variants.reduce((acc, variant) => acc + variant.price / 100, 0)
-      mediumPrice = total / providerService.variants.length
+      mediumPrice = Number((total / providerService.variants.length).toFixed(2))
     }
   })
 </script>
 
 <li
-  class="flex flex-col gap-1 bg-white w-[95vw] xl:w-80 p-4 border-gray-300 border rounded-md shadow-md h-full justify-between"
+  class="flex flex-col gap-1 bg-white w-[95vw] xl:w-100 p-4 border-gray-300 border rounded-md shadow-md h-full justify-between"
 >
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-2">

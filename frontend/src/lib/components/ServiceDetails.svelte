@@ -9,6 +9,7 @@
   import type { IUser } from '$lib/interfaces/IUser'
   import { toast } from 'svelte-sonner'
   import { Toaster } from './ui/sonner'
+  import getAuthUser from '../../utils/getAuthUser'
 
   interface Props {
     providerService: IProviderService
@@ -22,6 +23,7 @@
   let availability: TAvailability = $state({})
   let selectedAvailabilityItem = $state<TAvailability[string] | null>(null)
   let selectedVariantId: string = $state('')
+  let authUser: IUser | null = $state(null)
 
   const images = providerService.imagesUrls.map((url) => ({
     alt: 'Service Image',
@@ -30,6 +32,7 @@
   }))
 
   onMount(async () => {
+    authUser = await getAuthUser()
     const res = await api.axios.get(`/service/provided/${providerService.id}/availability`)
 
     if (res.status !== 200) return
@@ -95,6 +98,7 @@
     if (res.status === 201) {
       modalVisible = false
       toast.success('Serviço contratado com sucesso!')
+      location.reload()
     } else {
       toast.error('Erro ao processar sua solicitação. Tente novamente.')
     }
@@ -193,6 +197,12 @@
 
   <div class="flex justify-between">
     <Button color="gray" onclick={() => (modalVisible = false)}>Fechar</Button>
-    <Button onclick={() => handleContract()}>Contratar</Button>
+    <Button
+      class={authUser && authUser.id !== providerService.provider.id
+        ? 'cursor-pointer'
+        : 'cursor-not-allowed bg-primary-400 hover:bg-primary-400'}
+      onclick={() => authUser && authUser.id !== providerService.provider.id && handleContract()}
+      >Contratar</Button
+    >
   </div>
 </Modal>
