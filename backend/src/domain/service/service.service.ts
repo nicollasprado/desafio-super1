@@ -277,9 +277,15 @@ export default class ServiceService {
   async deleteProvidedService(id: string) {
     const providerService = await this.getProviderServiceById(id);
 
-    await prisma.providerService.update({
-      where: { id: providerService.id, deletedAt: null },
-      data: { deletedAt: new Date() },
+    await prisma.$transaction(async (prisma) => {
+      await prisma.providerService.update({
+        where: { id: providerService.id, deletedAt: null },
+        data: { deletedAt: new Date() },
+      });
+
+      await this.serviceSearchService.removeProvidedServiceIndex(
+        providerService.id,
+      );
     });
   }
 
