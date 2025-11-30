@@ -4,4 +4,5 @@ export type TServiceStatus =
   | 'SCHEDULED'
   | 'ONGOING'
   | 'FINISHED'
-  | 'CANCELLED'
+  | 'CANCELED'
+  | 'REJECTED'

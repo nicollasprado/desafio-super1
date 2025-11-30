@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -60,8 +61,24 @@ export default class ServiceController {
 
   @UseGuards(AuthGuard)
   @Get('contracted')
-  async getAllContracted(@Query() query: GetAllContractedQueryDto) {
+  async getAllContracted(
+    @Query() query: GetAllContractedQueryDto,
+    @Req() req: Request,
+  ) {
+    const token = extractTokenFromHeader(req);
+
+    if (!token) {
+      throw new InvalidTokenException();
+    }
+
+    const authorId = (await this.authService.describeMe(token)).id;
+
     const { page = 1, limit = 10, contractorId, providerId } = query;
+
+    if (authorId !== contractorId && authorId !== providerId) {
+      throw new ForbiddenException();
+    }
+
     return this.serviceService.getAllContracted({
       page,
       limit,
@@ -94,6 +111,46 @@ export default class ServiceController {
     const author = await this.authService.describeMe(token);
 
     return await this.serviceService.acceptContract(
+      contractedServiceId,
+      author.id,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('contracted/:contractedServiceId/cancel')
+  async cancelContract(
+    @Param('contractedServiceId') contractedServiceId: string,
+    @Req() req: Request,
+  ) {
+    const token = extractTokenFromHeader(req);
+
+    if (!token) {
+      throw new InvalidTokenException();
+    }
+
+    const author = await this.authService.describeMe(token);
+
+    return await this.serviceService.acceptContract(
+      contractedServiceId,
+      author.id,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('contracted/:contractedServiceId/reject')
+  async rejectContract(
+    @Param('contractedServiceId') contractedServiceId: string,
+    @Req() req: Request,
+  ) {
+    const token = extractTokenFromHeader(req);
+
+    if (!token) {
+      throw new InvalidTokenException();
+    }
+
+    const author = await this.authService.describeMe(token);
+
+    return await this.serviceService.rejectContract(
       contractedServiceId,
       author.id,
     );

@@ -15,9 +15,10 @@
   import { onMount } from 'svelte'
   import getAuthUser from '../../../utils/getAuthUser'
   import type { IUser } from '$lib/interfaces/IUser'
-  import { ArrowLeftOutline, ArrowRightOutline } from 'flowbite-svelte-icons'
+  import { ArrowLeftOutline, ArrowRightOutline, TrashBinOutline } from 'flowbite-svelte-icons'
   import ServiceStatusBadge from '$lib/components/ServiceStatusBadge.svelte'
   import formatPrice from '../../../utils/formatPrice'
+  import { toast, Toaster } from 'svelte-sonner'
 
   let contractedServices: IContractedService[] = $state([])
   let pagination: IPagination = $state({
@@ -70,6 +71,7 @@
 
     fetchContractedServices()
   }
+
   const handleNext = async () => {
     if (pagination.currentPage === pagination.totalPages) return
 
@@ -77,11 +79,25 @@
 
     fetchContractedServices()
   }
+
+  const handleCancel = async (contractedServiceId: string) => {
+    const req = await api.axios.patch(`/service/contracted/${contractedServiceId}/cancel`)
+
+    if (req.status === 200) {
+      toast.success('Serviço cancelado com sucesso!')
+
+      setTimeout(() => {
+        location.reload()
+      }, 2000)
+    }
+  }
 </script>
 
 <Header />
 
 <main class="h-full">
+  <Toaster position="top-center" />
+
   <h2 class="text-xl font-bold p-4">Serviços Contratados</h2>
 
   <div class="flex flex-col gap-6">
@@ -94,6 +110,7 @@
         <TableHeadCell>Status</TableHeadCell>
         <TableHeadCell>Início</TableHeadCell>
         <TableHeadCell>Fim</TableHeadCell>
+        <TableHeadCell>Ações</TableHeadCell>
       </TableHead>
       <TableBody>
         {#each contractedServices as contractedService}
@@ -130,6 +147,19 @@
               >{new Date(contractedService.start).toLocaleString('pt-br')}</TableBodyCell
             >
             <TableBodyCell>{new Date(contractedService.end).toLocaleString('pt-br')}</TableBodyCell>
+            {#if contractedService.status === 'WAITING_CONFIRMATION'}
+              <TableBodyCell>
+                <button
+                  type="button"
+                  class="flex gap-2 text-red-400 cursor-pointer"
+                  onclick={() => handleCancel(contractedService.id)}
+                >
+                  <TrashBinOutline /> Cancelar
+                </button>
+              </TableBodyCell>
+            {:else}
+              <TableBodyCell>—</TableBodyCell>
+            {/if}
           </TableBodyRow>
         {/each}
       </TableBody>

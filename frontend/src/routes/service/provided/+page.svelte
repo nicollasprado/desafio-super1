@@ -15,9 +15,10 @@
   import { onMount } from 'svelte'
   import getAuthUser from '../../../utils/getAuthUser'
   import type { IUser } from '$lib/interfaces/IUser'
-  import { ArrowLeftOutline, ArrowRightOutline } from 'flowbite-svelte-icons'
+  import { ArrowLeftOutline, ArrowRightOutline, TrashBinOutline } from 'flowbite-svelte-icons'
   import ServiceStatusBadge from '$lib/components/ServiceStatusBadge.svelte'
   import formatPrice from '../../../utils/formatPrice'
+  import { toast, Toaster } from 'svelte-sonner'
 
   let providedServices: IContractedService[] = $state([])
   let pagination: IPagination = $state({
@@ -70,6 +71,7 @@
 
     fetchProvidedServices()
   }
+
   const handleNext = async () => {
     if (pagination.currentPage === pagination.totalPages) return
 
@@ -77,11 +79,25 @@
 
     fetchProvidedServices()
   }
+
+  const handleReject = async (contractedServiceId: string) => {
+    const req = await api.axios.patch(`/service/contracted/${contractedServiceId}/reject`)
+
+    if (req.status === 200) {
+      toast.success('Serviço rejeitado com sucesso!')
+
+      setTimeout(() => {
+        location.reload()
+      }, 2000)
+    }
+  }
 </script>
 
 <Header />
 
 <main class="h-full">
+  <Toaster position="top-center" />
+
   <h2 class="text-xl font-bold p-4">Serviços Prestados</h2>
 
   <div class="flex flex-col gap-6">
@@ -94,6 +110,7 @@
         <TableHeadCell>Status</TableHeadCell>
         <TableHeadCell>Início</TableHeadCell>
         <TableHeadCell>Fim</TableHeadCell>
+        <TableHeadCell>Ações</TableHeadCell>
       </TableHead>
       <TableBody>
         {#each providedServices as providedService}
@@ -128,6 +145,19 @@
             <TableBodyCell><ServiceStatusBadge status={providedService.status} /></TableBodyCell>
             <TableBodyCell>{new Date(providedService.start).toLocaleString('pt-br')}</TableBodyCell>
             <TableBodyCell>{new Date(providedService.end).toLocaleString('pt-br')}</TableBodyCell>
+            {#if providedService.status === 'WAITING_CONFIRMATION'}
+              <TableBodyCell>
+                <button
+                  type="button"
+                  class="flex gap-2 text-red-400 cursor-pointer"
+                  onclick={() => handleReject(providedService.id)}
+                >
+                  <TrashBinOutline /> Rejeitar
+                </button>
+              </TableBodyCell>
+            {:else}
+              <TableBodyCell>—</TableBodyCell>
+            {/if}
           </TableBodyRow>
         {/each}
       </TableBody>

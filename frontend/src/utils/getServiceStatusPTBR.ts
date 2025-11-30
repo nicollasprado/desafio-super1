@@ -16,6 +16,8 @@ const getServiceStatusPTBR = (status: TServiceStatus): string => {
       return 'Concluído'
     case 'CANCELED':
       return 'Cancelado'
+    case 'REJECTED':
+      return 'Rejeitado'
     default:
       return '-'
   }

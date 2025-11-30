@@ -531,4 +531,87 @@ export default class ServiceService {
 
     return updatedContractedService;
   }
+
+  async cancelContract(contractedServiceId: string, authorId: string) {
+    const contractedService = await prisma.contractedService.findUnique({
+      where: { id: contractedServiceId, deletedAt: null },
+      include: {
+        variant: {
+          include: {
+            providerService: true,
+          },
+        },
+      },
+    });
+
+    if (!contractedService) {
+      throw new NotFoundException('contracted service');
+    }
+
+    if (
+      contractedService.contractorId !== authorId &&
+      contractedService.variant.providerService.providerId !== authorId
+    ) {
+      throw new ForbiddenException();
+    }
+
+    const updatedContractedService = await prisma.$transaction(
+      async (prisma) => {
+        const updatedContractedService = await prisma.contractedService.update({
+          where: { id: contractedService.id, deletedAt: null },
+          data: {
+            status: 'CANCELED',
+          },
+          select: GetContractedServiceSelect,
+        });
+
+        await this.serviceSearchService.updateContractedServiceStatus(
+          updatedContractedService.id,
+          updatedContractedService.status,
+        );
+      },
+    );
+
+    return updatedContractedService;
+  }
+
+  async rejectContract(contractedServiceId: string, authorId: string) {
+    const contractedService = await prisma.contractedService.findUnique({
+      where: { id: contractedServiceId, deletedAt: null },
+      include: {
+        variant: {
+          include: {
+            providerService: true,
+          },
+        },
+      },
+    });
+
+    if (!contractedService) {
+      throw new NotFoundException('contracted service');
+    }
+
+    if (contractedService.variant.providerService.providerId !== authorId) {
+      throw new ForbiddenException();
+    }
+
+    const updatedContractedService = await prisma.$transaction(
+      async (prisma) => {
+        const updatedContractedService = await prisma.contractedService.update({
+          where: { id: contractedService.id, deletedAt: null },
+          data: {
+            status: 'REJECTED',
+          },
+          select: GetContractedServiceSelect,
+        });
+
+        await this.serviceSearchService.updateContractedServiceStatus(
+          updatedContractedService.id,
+          updatedContractedService.status,
+        );
+      },
+    );
+
+    return updatedContractedService;
+  }
 }

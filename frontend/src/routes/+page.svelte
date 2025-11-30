@@ -5,10 +5,11 @@
   import Header from '$lib/components/Header.svelte'
   import Filter from '$lib/components/Filter.svelte'
   import ServiceCard from '$lib/components/ServiceCard.svelte'
-  import { PlusOutline } from 'flowbite-svelte-icons'
-  import { GradientButton } from 'flowbite-svelte'
   import ProvideServiceModal from '$lib/components/ProvideService/ProvideServiceModal.svelte'
   import type IService from '$lib/interfaces/IService'
+  import { PaginationNav } from 'flowbite-svelte'
+  import { ArrowLeftOutline, ArrowRightOutline } from 'flowbite-svelte-icons'
+  import type IPagination from '$lib/interfaces/IPagination'
 
   interface IFilters {
     search?: string
@@ -21,15 +22,16 @@
     serviceId: undefined,
   })
   let services: IService[] = $state([])
+  let pagination: IPagination = $state({
+    totalCount: 0,
+    totalPages: 1,
+    currentPage: 1,
+    perPage: 10,
+  })
 
   interface IProviderServiceResponse {
     data: IProviderService[]
-    pagination: {
-      totalCount: number
-      currentPage: number
-      perPage: number
-      totalPages: number
-    }
+    pagination: IPagination
   }
 
   onMount(async () => {
@@ -44,8 +46,8 @@
     const fetchProviderServices = async () => {
       const res = await api.axios.get<IProviderServiceResponse>('/service/provided', {
         params: {
-          page: 1,
-          limit: 10,
+          page: pagination.currentPage,
+          limit: pagination.perPage,
         },
       })
 
@@ -90,6 +92,12 @@
   const handleServiceIdChange = (newServiceId: string) => {
     filters.serviceId = newServiceId
   }
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > pagination.totalPages) return
+
+    pagination.currentPage = newPage
+  }
 </script>
 
 <svelte:head>
@@ -120,12 +128,30 @@
         </div>
       </div>
 
-      <main>
+      <main class="flex flex-col gap-20">
         <ol class="flex flex-col xl:flex-row gap-10 xl:gap-20 flex-wrap items-center">
           {#each providerServices as providerService (providerService.id)}
             <ServiceCard {providerService} />
           {/each}
         </ol>
+
+        <div class="flex items-center justify-center">
+          <PaginationNav
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={(page) => handlePageChange(page)}
+          >
+            {#snippet prevContent()}
+              <span class="sr-only">Anterior</span>
+              <ArrowLeftOutline class="h-5 w-5" />
+            {/snippet}
+
+            {#snippet nextContent()}
+              <span class="sr-only">Próximo</span>
+              <ArrowRightOutline class="h-5 w-5" />
+            {/snippet}
+          </PaginationNav>
+        </div>
       </main>
     </div>
   </div>
