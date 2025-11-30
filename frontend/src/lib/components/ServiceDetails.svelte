@@ -103,7 +103,7 @@
 
 <Button class="cursor-pointer" onclick={() => (modalVisible = true)}>Ver detalhes</Button>
 
-<Modal bind:open={modalVisible} size="lg" title="Detalhes do Serviço" class="z-1">
+<Modal bind:open={modalVisible} size="lg" title="Detalhes do Serviço">
   <div class="absolute">
     <Toaster position="top-center" />
   </div>

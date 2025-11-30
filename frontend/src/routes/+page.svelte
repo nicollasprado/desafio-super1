@@ -5,9 +5,10 @@
   import Header from '$lib/components/Header.svelte'
   import Filter from '$lib/components/Filter.svelte'
   import ServiceCard from '$lib/components/ServiceCard.svelte'
-  import getAuthUser from '../utils/getAuthUser'
   import { PlusOutline } from 'flowbite-svelte-icons'
-  import { Button, GradientButton } from 'flowbite-svelte'
+  import { GradientButton } from 'flowbite-svelte'
+  import ProvideServiceModal from '$lib/components/ProvideService/ProvideServiceModal.svelte'
+  import type IService from '$lib/interfaces/IService'
 
   interface IFilters {
     search?: string
@@ -19,7 +20,7 @@
     search: undefined,
     serviceId: undefined,
   })
-  let isAuthenticated: boolean = $state(getAuthUser() !== null)
+  let services: IService[] = $state([])
 
   interface IProviderServiceResponse {
     data: IProviderService[]
@@ -32,14 +33,27 @@
   }
 
   onMount(async () => {
-    const res = await api.axios.get<IProviderServiceResponse>('/service/provided', {
-      params: {
-        page: 1,
-        limit: 10,
-      },
-    })
+    const fetchServices = async () => {
+      const res = await api.axios.get<IService[]>('/service')
 
-    providerServices = res.data.data
+      if (res.status === 200) {
+        services = res.data
+      }
+    }
+
+    const fetchProviderServices = async () => {
+      const res = await api.axios.get<IProviderServiceResponse>('/service/provided', {
+        params: {
+          page: 1,
+          limit: 10,
+        },
+      })
+
+      providerServices = res.data.data
+    }
+
+    await fetchServices()
+    await fetchProviderServices()
   })
 
   $effect(() => {
@@ -97,27 +111,17 @@
               <p class="text-orange-100">Cadastre seu serviço e comece a receber clientes agora!</p>
             </div>
 
-            <GradientButton color="cyanToBlue" class="flex items-center cursor-pointer">
-              <PlusOutline class="w-6 h-6 me-2" />
-              <p class="font-bold">Cadastrar Serviço</p>
-            </GradientButton>
+            <ProvideServiceModal {services} />
           </div>
         </div>
 
         <div class="xl:m-auto">
-          <Filter {handleSearchChange} {handleServiceIdChange} />
+          <Filter {handleSearchChange} {handleServiceIdChange} {services} />
         </div>
       </div>
 
       <main>
         <ol class="flex flex-col xl:flex-row gap-4 items-center">
-          <!-- {#if isAuthenticated}
-            <Button outline class="w-30 h-30 flex flex-col gap-1">
-              <PlusOutline />
-              <p>Prestar Serviço</p>
-            </Button>
-          {/if} -->
-
           {#each providerServices as providerService (providerService.id)}
             <ServiceCard {providerService} />
           {/each}

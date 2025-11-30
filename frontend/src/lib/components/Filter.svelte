@@ -5,16 +5,16 @@
   import { SearchSolid } from 'flowbite-svelte-icons'
   import { onMount } from 'svelte'
 
-  let services: IService[] = $state([])
   let search: string = $state('')
   let selectedService: string = $state('')
 
   interface Props {
+    services: IService[]
     handleSearchChange: (search: string) => void
     handleServiceIdChange: (serviceId: string) => void
   }
 
-  let { handleSearchChange, handleServiceIdChange }: Props = $props()
+  let { handleSearchChange, handleServiceIdChange, services }: Props = $props()
 
   $effect(() => {
     search
@@ -27,14 +27,6 @@
 
   $effect(() => {
     handleServiceIdChange(selectedService)
-  })
-
-  onMount(async () => {
-    const res = await api.axios.get<IService[]>('/service')
-
-    if (res.status === 200) {
-      services = res.data
-    }
   })
 </script>
 
