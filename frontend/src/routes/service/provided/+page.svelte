@@ -4,6 +4,7 @@
   import type IContractedService from '$lib/interfaces/IContractedService'
   import type IPagination from '$lib/interfaces/IPagination'
   import {
+    Button,
     Pagination,
     Table,
     TableBody,
@@ -15,7 +16,12 @@
   import { onMount } from 'svelte'
   import getAuthUser from '../../../utils/getAuthUser'
   import type { IUser } from '$lib/interfaces/IUser'
-  import { ArrowLeftOutline, ArrowRightOutline, TrashBinOutline } from 'flowbite-svelte-icons'
+  import {
+    ArrowLeftOutline,
+    ArrowRightOutline,
+    CheckOutline,
+    TrashBinOutline,
+  } from 'flowbite-svelte-icons'
   import ServiceStatusBadge from '$lib/components/ServiceStatusBadge.svelte'
   import formatPrice from '../../../utils/formatPrice'
   import { toast, Toaster } from 'svelte-sonner'
@@ -91,6 +97,17 @@
       }, 2000)
     }
   }
+
+  const handleAccept = async (contractedServiceId: string) => {
+    const req = await api.axios.patch(`/service/contracted/${contractedServiceId}/accept`)
+
+    if (req.status === 200) {
+      toast.success('Serviço aceito com sucesso!')
+      setTimeout(() => {
+        location.reload()
+      }, 2000)
+    }
+  }
 </script>
 
 <Header />
@@ -147,13 +164,25 @@
             <TableBodyCell>{new Date(providedService.end).toLocaleString('pt-br')}</TableBodyCell>
             {#if providedService.status === 'WAITING_CONFIRMATION'}
               <TableBodyCell>
-                <button
-                  type="button"
-                  class="flex gap-2 text-red-400 cursor-pointer"
-                  onclick={() => handleReject(providedService.id)}
-                >
-                  <TrashBinOutline /> Rejeitar
-                </button>
+                <div class="flex flex-col gap-4">
+                  <Button
+                    color="red"
+                    type="button"
+                    class="w-fit flex gap-2 cursor-pointer"
+                    onclick={() => handleReject(providedService.id)}
+                  >
+                    <TrashBinOutline /> Rejeitar
+                  </Button>
+
+                  <Button
+                    color="green"
+                    type="button"
+                    class="w-fit flex gap-2 cursor-pointer"
+                    onclick={() => handleAccept(providedService.id)}
+                  >
+                    <CheckOutline /> Aceitar
+                  </Button>
+                </div>
               </TableBodyCell>
             {:else}
               <TableBodyCell>—</TableBodyCell>

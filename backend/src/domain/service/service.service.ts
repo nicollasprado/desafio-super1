@@ -528,6 +528,14 @@ export default class ServiceService {
           updatedContractedService.id,
           updatedContractedService.status,
         );
+
+        const cacheKey = `${CACHE_KEYS.PROVIDER_SERVICE_AVAILABILITY}:${updatedContractedService.variant.providerService.id}`;
+
+        const avaiabilityCached = await this.redis.get(cacheKey);
+
+        if (avaiabilityCached) {
+          await this.redis.del(cacheKey);
+        }
       },
     );
 
