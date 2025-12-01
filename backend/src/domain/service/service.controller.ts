@@ -367,8 +367,16 @@ export default class ServiceController {
   @ApiResponse({ status: 404, description: 'Serviço não encontrado' })
   @UseGuards(AuthGuard)
   @Delete('provided/:id')
-  async deleteProvidedService(@Param('id') id: string) {
-    await this.serviceService.deleteProvidedService(id);
+  async deleteProvidedService(@Param('id') id: string, @Req() req: Request) {
+    const token = extractTokenFromHeader(req);
+
+    if (!token) {
+      throw new InvalidTokenException();
+    }
+
+    const author = await this.authService.describeMe(token);
+
+    await this.serviceService.deleteProvidedService(id, author.id);
   }
 
   @ApiOperation({

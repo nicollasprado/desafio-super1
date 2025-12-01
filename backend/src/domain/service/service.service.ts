@@ -295,8 +295,12 @@ export default class ServiceService {
     return newContractedService;
   }
 
-  async deleteProvidedService(id: string) {
+  async deleteProvidedService(id: string, authorId: string) {
     const providerService = await this.getProviderServiceById(id);
+
+    if (providerService.providerId !== authorId) {
+      throw new ForbiddenException();
+    }
 
     await prisma.$transaction(async (prisma) => {
       await prisma.providerService.update({
