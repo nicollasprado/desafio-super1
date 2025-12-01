@@ -151,8 +151,8 @@
                 {/if}
 
                 <p>
-                  {providedService.variant.providerService.provider.firstName}
-                  {providedService.variant.providerService.provider.lastName}
+                  {providedService.contractor.firstName}
+                  {providedService.contractor.lastName}
                 </p>
               </div>
             </TableBodyCell>
