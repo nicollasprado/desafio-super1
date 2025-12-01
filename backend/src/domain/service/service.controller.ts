@@ -315,7 +315,7 @@ export default class ServiceController {
 
     const author = await this.authService.describeMe(token);
 
-    return await this.serviceService.acceptContract(
+    return await this.serviceService.cancelContract(
       contractedServiceId,
       author.id,
     );
