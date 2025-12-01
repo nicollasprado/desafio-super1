@@ -13,7 +13,7 @@ Plataforma completa para conectar prestadores de serviços a clientes, permitind
 - pnpm
 - Docker e Docker Compose
 
-## ⚙️ Configuração e Instalação
+## Configuração e Instalação
 
 ### 1. Clone o repositório
 
@@ -58,7 +58,7 @@ REDIS_URL=redis://localhost:6379
 - PUBLIC_API_URL: URL da api (backend)
 
 ```env
-PUBLIC_API_URL="http://localhost:3333"
+VITE_API_URL="http://localhost:3333"
 ```
 
 ### 3. Inicie os serviços Docker
