@@ -131,7 +131,7 @@ pnpm dev
 
 O frontend estará disponível em `http://localhost:5173`
 
-## 📚 Documentação da API
+## Documentação da API
 
 Acesse a documentação interativa Swagger em:
 
@@ -139,7 +139,7 @@ Acesse a documentação interativa Swagger em:
 http://localhost:3333/api-docs
 ```
 
-## 🗄️ Modelo de Dados
+## Modelo de Dados
 
 ### Principais Entidades
 
